@@ -46,7 +46,6 @@ namespace Exiv2 {
 // *****************************************************************************
 // class declarations
     class MakerNote;
-    class Ifd;
 
 // *****************************************************************************
 // class definitions
@@ -57,7 +56,6 @@ namespace Exiv2 {
              allocation.
     */
     class Entry {
-        friend class Ifd;
     public:
         //! @name Creators
         //@{
@@ -327,11 +325,6 @@ namespace Exiv2 {
         //@}
 
     public:
-        //! %Entries const iterator type
-        typedef Entries::const_iterator const_iterator;
-        //! %Entries iterator type
-        typedef Entries::iterator iterator;
-
         //! @name Creators
         //@{
         /*!
@@ -357,6 +350,11 @@ namespace Exiv2 {
         ~Ifd();
         //@}
 
+        //! Entries const iterator type
+        typedef Entries::const_iterator const_iterator;
+        //! Entries iterator type
+        typedef Entries::iterator iterator;
+
         //! @name Manipulators
         //@{
         /*!
@@ -378,6 +376,28 @@ namespace Exiv2 {
                     case.
          */
         int read(const byte* buf, long len, ByteOrder byteOrder, long offset =0);
+        /*!
+          @brief Read a sub-IFD from the location pointed to by the directory entry 
+                 with the given tag.
+
+          @param dest References the destination IFD.
+          @param buf The data buffer to read from. The buffer must contain all Exif 
+                     data starting from the TIFF header (unlike the read() method).
+          @param len Number of bytes in the data buffer 
+          @param byteOrder Applicable byte order (little or big endian).
+          @param tag Tag to look for.
+
+          @return 0 if successful;<BR>
+                  6 if reading the sub-IFD failed (see read() above) or
+                    the location pointed to by the directory entry with the 
+                    given tag is outside of the data buffer.
+
+          @note It is not considered an error if the tag cannot be found in the 
+                IFD. 0 is returned and no action is taken in this case.
+        */
+        int readSubIfd(
+            Ifd& dest, const byte* buf, long len, ByteOrder byteOrder, uint16_t tag
+        ) const;
         /*!
           @brief Copy the IFD to a data array, update the offsets of the IFD and
                  all its entries, return the number of bytes written.
@@ -445,39 +465,10 @@ namespace Exiv2 {
         iterator findIdx(int idx);
         //! Find an IFD entry by tag, return an iterator into the entries list
         iterator findTag(uint16_t tag);
-        /*
-          @brief Update the base pointer of the Ifd and all entries to \em pNewBase.
-
-          Allows to re-locate the underlying data buffer to a new location
-          \em pNewBase. This method only has an effect in non-alloc mode.
-         */
-        void updateBase(byte* pNewBase);
         //@}
 
         //! @name Accessors
         //@{
-        /*!
-          @brief Read a sub-IFD from the location pointed to by the directory entry 
-                 with the given tag.
-
-          @param dest References the destination IFD.
-          @param buf The data buffer to read from. The buffer must contain all Exif 
-                     data starting from the TIFF header (unlike the read() method).
-          @param len Number of bytes in the data buffer 
-          @param byteOrder Applicable byte order (little or big endian).
-          @param tag Tag to look for.
-
-          @return 0 if successful;<BR>
-                  6 if reading the sub-IFD failed (see read() above) or
-                    the location pointed to by the directory entry with the 
-                    given tag is outside of the data buffer.
-
-          @note It is not considered an error if the tag cannot be found in the 
-                IFD. 0 is returned and no action is taken in this case.
-        */
-        int readSubIfd(
-            Ifd& dest, const byte* buf, long len, ByteOrder byteOrder, uint16_t tag
-        ) const;
         //! Get the memory allocation mode, see the Ifd class description for details
         bool alloc() const { return alloc_; }
         //! The first entry

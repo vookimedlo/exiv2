@@ -57,14 +57,9 @@ namespace Exiv2 {
     {
     }
 
-    MakerNote::AutoPtr MakerNote::create(bool alloc) const
+    MakerNote::AutoPtr MakerNote::clone(bool alloc) const
     {
-        return AutoPtr(create_(alloc));
-    }
-
-    MakerNote::AutoPtr MakerNote::clone() const
-    {
-        return AutoPtr(clone_());
+        return AutoPtr(clone_(alloc));
     }
 
     std::string MakerNote::tagName(uint16_t tag) const
@@ -147,13 +142,6 @@ namespace Exiv2 {
     {
     }
 
-    IfdMakerNote::IfdMakerNote(const IfdMakerNote& rhs)
-        : MakerNote(rhs), absOffset_(rhs.absOffset_), adjOffset_(rhs.adjOffset_),
-          header_(rhs.header_.size_), ifd_(rhs.ifd_)
-    {
-        memcpy(header_.pData_, rhs.header_.pData_, header_.size_);
-    }
-
     int IfdMakerNote::read(const byte* buf,
                            long len, 
                            ByteOrder byteOrder, 
@@ -219,15 +207,6 @@ namespace Exiv2 {
         return 0;
     }
 
-    void IfdMakerNote::updateBase(byte* pNewBase)
-    { 
-        ifd_.updateBase(pNewBase);
-        Entries::iterator end = ifd_.end();
-        for (Entries::iterator i = ifd_.begin(); i != end; ++i) {
-            i->setMakerNote(this);
-        }
-    }
-
     int IfdMakerNote::checkHeader() const
     {
         // Default implementation does nothing, assuming there is no header
@@ -255,14 +234,9 @@ namespace Exiv2 {
         return headerSize() + ifd_.size() + ifd_.dataSize();
     }
 
-    IfdMakerNote::AutoPtr IfdMakerNote::create(bool alloc) const
+    IfdMakerNote::AutoPtr IfdMakerNote::clone(bool alloc) const
     {
-        return AutoPtr(create_(alloc));
-    }
-
-    IfdMakerNote::AutoPtr IfdMakerNote::clone() const
-    {
-        return AutoPtr(clone_());
+        return AutoPtr(clone_(alloc));
     }
 
     MakerNoteFactory* MakerNoteFactory::pInstance_ = 0;
@@ -288,7 +262,7 @@ namespace Exiv2 {
         IfdItemRegistry::const_iterator i = ifdItemRegistry_.find(ifdItem);
         if (i == ifdItemRegistry_.end()) return MakerNote::AutoPtr(0);
         assert(i->second);
-        return i->second->create(alloc);
+        return i->second->clone(alloc);
     } // MakerNoteFactory::create
 
     void MakerNoteFactory::registerMakerNote(const std::string& make, 

@@ -101,7 +101,7 @@ diffCheck()
     #run diff and check results
     diff -q $diffargs $test $good
     if [ $? -ne 0 ]; then
-       errors=`expr $errors + 1`
+       let ++errors
     else
        rm $test
     fi 
@@ -111,7 +111,6 @@ diffCheck()
 # main
 
 LD_LIBRARY_PATH=../../src:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH
 binpath="../../src"
 datapath="../data"
 diffargs="--strip-trailing-cr"
@@ -124,23 +123,20 @@ fi
 
 test_files="smiley1.jpg smiley2.jpg glider.exv table.jpg"
 
-errors=0
+let errors=0
 cd ./tmp
 echo
 
 echo -n "Read tests"
 for i in $test_files; do printTest $i; done
 
-echo
-echo -n "Remove tests"
+echo -ne "\nRemove tests"
 for i in $test_files; do removeTest $i; done
 
-echo
-echo -n "Add/Mod tests"
+echo -ne "\nAdd/Mod tests"
 for i in $test_files; do addModTest $i; done
 
-echo
-echo -n "Extended tests"
+echo -ne "\nExtended tests"
 for i in $test_files; do extendedTest $i; done
 
 echo -e "\n---------------------------------------------------------"

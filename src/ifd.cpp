@@ -282,10 +282,9 @@ namespace Exiv2 {
           pBase_(rhs.pBase_), offset_(rhs.offset_), 
           dataOffset_(rhs.dataOffset_), pNext_(rhs.pNext_), next_(rhs.next_)
     {
-        if (alloc_) {
+        if (alloc_ && rhs.pNext_) {
             pNext_ = new byte[4];
-            memset(pNext_, 0x0, 4);
-            if (rhs.pNext_) memcpy(pNext_, rhs.pNext_, 4); 
+            memcpy(pNext_, rhs.pNext_, 4); 
         }
     }
 
@@ -297,6 +296,7 @@ namespace Exiv2 {
 
         if (len < 2) rc = 6;
         if (rc == 0) {
+            if (!alloc_) pBase_ = const_cast<byte*>(buf);
             offset_ = offset;
             int n = getUShort(buf, byteOrder);
             o = 2;
@@ -416,7 +416,6 @@ namespace Exiv2 {
                 this->add(e);
             }
         }
-        if (!alloc_) pBase_ = const_cast<byte*>(buf) - offset_;
         if (rc) this->clear();
 
         return rc;
@@ -585,23 +584,6 @@ namespace Exiv2 {
     Ifd::iterator Ifd::erase(iterator pos)
     {
         return entries_.erase(pos);
-    }
-
-    void Ifd::updateBase(byte* pNewBase)
-    {
-        if (!alloc_) {
-            iterator end = this->end();
-            for (iterator pos = begin(); pos != end; ++pos) {
-                if (pos->pDataArea_) {
-                    pos->pDataArea_ = pos->pDataArea_ - pBase_ + pNewBase;
-                }
-                if (pos->pData_) {
-                    pos->pData_ = pos->pData_ - pBase_ + pNewBase;
-                }
-            }
-            pNext_ = pNext_ - pBase_ + pNewBase;
-            pBase_ = pNewBase;
-        }
     }
 
     long Ifd::size() const

@@ -96,8 +96,6 @@ namespace Exiv2 {
                  is required for the makernote entries.
          */
         SigmaMakerNote(bool alloc =true);
-        //! Copy constructor
-        SigmaMakerNote(const SigmaMakerNote& rhs);
         //! Virtual destructor
         virtual ~SigmaMakerNote() {}
         //@}
@@ -112,8 +110,7 @@ namespace Exiv2 {
         //! @name Accessors
         //@{
         int checkHeader() const;
-        AutoPtr create(bool alloc =true) const;
-        AutoPtr clone() const;
+        AutoPtr clone(bool alloc =true) const;
         //! Return the name of the makernote item ("Sigma")
         std::string ifdItem() const { return ifdItem_; }
         std::ostream& printTag(std::ostream& os,
@@ -132,10 +129,8 @@ namespace Exiv2 {
         //@}
 
     private:
-        //! Internal virtual create function.
-        SigmaMakerNote* create_(bool alloc =true) const;
         //! Internal virtual copy constructor.
-        SigmaMakerNote* clone_() const;
+        SigmaMakerNote* clone_(bool alloc =true) const;
 
         //! Structure used to auto-register the MakerNote.
         struct RegisterMakerNote {

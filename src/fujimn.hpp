@@ -97,8 +97,6 @@ namespace Exiv2 {
                  is required for the makernote entries.
          */
         FujiMakerNote(bool alloc =true);
-        //! Copy constructor
-        FujiMakerNote(const FujiMakerNote& rhs);
         //! Virtual destructor
         virtual ~FujiMakerNote() {}
         //@}
@@ -113,8 +111,7 @@ namespace Exiv2 {
         //! @name Accessors
         //@{
         int checkHeader() const;
-        AutoPtr create(bool alloc =true) const;
-        AutoPtr clone() const;
+        AutoPtr clone(bool alloc =true) const;
         //! Return the name of the makernote item ("Fujifilm")
         std::string ifdItem() const { return ifdItem_; }
         std::ostream& printTag(std::ostream& os,
@@ -143,10 +140,8 @@ namespace Exiv2 {
         //@}
 
     private:
-        //! Internal virtual create function.
-        FujiMakerNote* create_(bool alloc =true) const;
         //! Internal virtual copy constructor.
-        FujiMakerNote* clone_() const;
+        FujiMakerNote* clone_(bool alloc =true) const;
 
         //! Structure used to auto-register the MakerNote.
         struct RegisterMakerNote {

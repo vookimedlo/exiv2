@@ -158,14 +158,6 @@ namespace Exiv2 {
         virtual Entries::iterator begin() =0;
         //! End of the makernote entries
         virtual Entries::iterator end() =0;
-        /*
-          @brief Update the base pointer of the MakerNote and all its entries 
-                 to \em pNewBase.
-
-          Allows to re-locate the underlying data buffer to a new location
-          \em pNewBase. This method only has an effect in non-alloc mode.
-         */
-        virtual void updateBase(byte* pNewBase) =0;
         //@}
 
         //! @name Accessors
@@ -180,23 +172,13 @@ namespace Exiv2 {
                  copied.  The caller owns the new object and the auto-pointer
                  ensures that it will be deleted.
 
-          @param alloc Memory management model for the newly created object. 
-                 Indicates if memory required to store data should be allocated
-                 and deallocated (true) or not (false). If false, only pointers
-                 to the buffer provided to read() will be kept. See Ifd for more
-                 background on this concept.
+          @param alloc Memory management model for the clone. Indicates if 
+                 memory required to store data should be allocated and deallocated
+                 (true) or not (false). If false, only pointers to the buffer
+                 provided to read() will be kept. See Ifd for more background on 
+                 this concept.
          */
-        AutoPtr create(bool alloc =true) const;
-        /*!
-          @brief Return an auto-pointer to a clone of this object. The caller
-                 owns the new object and the auto-pointer ensures that it will
-                 be deleted.
-
-          @note  In non-alloc mode the clone potentially contains pointers to 
-                 the same data buffer as the original. 
-                 Use updateBase(byte* pNewBase) to adjust them.
-         */
-        AutoPtr clone() const;
+        AutoPtr clone(bool alloc =true) const;
         /*!
           @brief Return the name of a makernote tag. The default implementation
                  looks up the makernote info tag array if one is set, else
@@ -265,10 +247,8 @@ namespace Exiv2 {
         ByteOrder byteOrder_;
 
     private:
-        //! Internal virtual create function.
-        virtual MakerNote* create_(bool alloc =true) const =0;
         //! Internal virtual copy constructor.
-        virtual MakerNote* clone_() const =0;
+        virtual MakerNote* clone_(bool alloc =true) const =0;
 
     }; // class MakerNote
 
@@ -297,8 +277,6 @@ namespace Exiv2 {
          */
         explicit IfdMakerNote(const MakerNote::MnTagInfo* pMnTagInfo =0, 
                               bool alloc =true);
-        //! Copy constructor
-        IfdMakerNote(const IfdMakerNote& rhs);
         //! Virtual destructor
         virtual ~IfdMakerNote() {}
         //@}
@@ -324,7 +302,6 @@ namespace Exiv2 {
         void add(const Entry& entry) { ifd_.add(entry); }
         Entries::iterator begin() { return ifd_.begin(); }
         Entries::iterator end() { return ifd_.end(); }
-        virtual void updateBase(byte* pNewBase);
         //@}
 
         //! @name Accessors
@@ -333,8 +310,7 @@ namespace Exiv2 {
         Entries::const_iterator end() const { return ifd_.end(); }
         Entries::const_iterator findIdx(int idx) const;
         long size() const;
-        AutoPtr create(bool alloc =true) const;
-        AutoPtr clone() const;
+        AutoPtr clone(bool alloc =true) const;
         /*!
           @brief Check the makernote header. This will typically check if a
                  required prefix string is present in the header. Return 0 if
@@ -383,8 +359,7 @@ namespace Exiv2 {
         Ifd ifd_;
 
     private:
-        virtual IfdMakerNote* create_(bool alloc =true) const =0;
-        virtual IfdMakerNote* clone_() const =0;
+        virtual IfdMakerNote* clone_(bool alloc =true) const =0;
 
     }; // class IfdMakerNote
 

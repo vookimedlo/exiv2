@@ -14,7 +14,6 @@
 
 #include <iostream>
 #include <string>
-#include <cstring>
 
 int main()
 try {
@@ -181,25 +180,6 @@ try {
         std::cout << "Ifd::read (8) failed, rc = " << rc << "\n";
     }
     ifd4.print(std::cout);
-
-    // -------------------------------------------------------------------------
-    std::cout << "\nMove data buffer\n";
-
-    Exiv2::Ifd ifd5(Exiv2::ifd0Id, 0, false);
-    rc = ifd5.read(buf+1, len-1, Exiv2::bigEndian, 1);
-    if (rc) {
-        std::cout << "Ifd::read (1) failed, rc = " << rc << "\n";
-        return rc;
-    }
-    ifd5.print(std::cout);
-
-    Exiv2::byte* newBuf = new Exiv2::byte[len];
-    memset(newBuf, 0x00, len);
-    memcpy(newBuf, buf, len);
-    memset(buf, 0x0, len);
-    ifd5.updateBase(newBuf);
-    ifd5.print(std::cout);
-    delete[] newBuf;
 
     return 0;
 }

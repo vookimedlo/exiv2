@@ -66,7 +66,7 @@ diffCheck()
     #run diff and check results
     diff -q --binary $test $good
     if [ $? -ne 0 ]; then
-       errors=`expr $errors + 1`
+       let ++errors
     else
        rm $test
     fi 
@@ -76,13 +76,12 @@ diffCheck()
 # main
 
 LD_LIBRARY_PATH=../../src:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH
 binpath="../../src"
 datapath="../data"
 
 test_files="table.jpg smiley1.jpg smiley2.jpg"
 
-errors=0
+let errors=0
 cd ./tmp
 echo
 
@@ -90,19 +89,17 @@ echo -n "Erase all tests"
 for i in $test_files; do eraseTest $i; done
 eraseTest "glider.exv" #extra test
 
-echo
-echo -n "Copy all tests"
-c=0
+echo -ne "\nCopy all tests"
+let c=0
 for src in $test_files; do
-    c=`expr $c + 1`
+    let ++c
     for dst in $test_files; do copyTest $c $src $dst; done
 done
 
-echo
-echo -n "Copy iptc tests"
-c=0
+echo -ne "\nCopy iptc tests"
+let c=0
 for src in $test_files; do
-    c=`expr $c + 1`
+    let ++c
     for dst in $test_files; do iptcTest $c $src $dst; done
 done
 

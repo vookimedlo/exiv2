@@ -77,29 +77,14 @@ namespace Exiv2 {
     {
     }
 
-    Nikon1MakerNote::Nikon1MakerNote(const Nikon1MakerNote& rhs)
-        : IfdMakerNote(rhs), ifdItem_(rhs.ifdItem_)
+    Nikon1MakerNote::AutoPtr Nikon1MakerNote::clone(bool alloc) const
     {
+        return AutoPtr(clone_(alloc));
     }
 
-    Nikon1MakerNote::AutoPtr Nikon1MakerNote::create(bool alloc) const
-    {
-        return AutoPtr(create_(alloc));
-    }
-
-    Nikon1MakerNote* Nikon1MakerNote::create_(bool alloc) const 
+    Nikon1MakerNote* Nikon1MakerNote::clone_(bool alloc) const 
     {
         return new Nikon1MakerNote(alloc);
-    }
-
-    Nikon1MakerNote::AutoPtr Nikon1MakerNote::clone() const
-    {
-        return AutoPtr(clone_());
-    }
-
-    Nikon1MakerNote* Nikon1MakerNote::clone_() const 
-    {
-        return new Nikon1MakerNote(*this);
     }
 
     std::ostream& Nikon1MakerNote::printTag(std::ostream& os, 
@@ -228,11 +213,6 @@ namespace Exiv2 {
         readHeader(buf, 8, byteOrder_);
     }
 
-    Nikon2MakerNote::Nikon2MakerNote(const Nikon2MakerNote& rhs)
-        : IfdMakerNote(rhs), ifdItem_(rhs.ifdItem_)
-    {
-    }
-
     int Nikon2MakerNote::readHeader(const byte* buf,
                                     long len, 
                                     ByteOrder byteOrder)
@@ -257,27 +237,17 @@ namespace Exiv2 {
         return rc;
     }
 
-    Nikon2MakerNote::AutoPtr Nikon2MakerNote::create(bool alloc) const
+    Nikon2MakerNote::AutoPtr Nikon2MakerNote::clone(bool alloc) const
     {
-        return AutoPtr(create_(alloc));
+        return AutoPtr(clone_(alloc));
     }
 
-    Nikon2MakerNote* Nikon2MakerNote::create_(bool alloc) const 
+    Nikon2MakerNote* Nikon2MakerNote::clone_(bool alloc) const 
     {
         AutoPtr makerNote(new Nikon2MakerNote(alloc)); 
         assert(makerNote.get() != 0);
         makerNote->readHeader(header_.pData_, header_.size_, byteOrder_);
         return makerNote.release();
-    }
-
-    Nikon2MakerNote::AutoPtr Nikon2MakerNote::clone() const
-    {
-        return AutoPtr(clone_());
-    }
-
-    Nikon2MakerNote* Nikon2MakerNote::clone_() const 
-    {
-        return new Nikon2MakerNote(*this);
     }
 
     std::ostream& Nikon2MakerNote::printTag(std::ostream& os, 
@@ -399,7 +369,7 @@ namespace Exiv2 {
     // Nikon3 MakerNote Tag Info
     static const MakerNote::MnTagInfo nikon3MnTagInfo[] = {
         MakerNote::MnTagInfo(0x0001, "Version", "Nikon Makernote version"),
-        MakerNote::MnTagInfo(0x0002, "ISOSpeed", "ISO speed used"),
+        MakerNote::MnTagInfo(0x0002, "ISOSpeed", "ISO speed setting"),
         MakerNote::MnTagInfo(0x0003, "ColorMode", "Color mode"),
         MakerNote::MnTagInfo(0x0004, "Quality", "Image quality setting"),
         MakerNote::MnTagInfo(0x0005, "WhiteBalance", "White balance"),
@@ -408,19 +378,12 @@ namespace Exiv2 {
         MakerNote::MnTagInfo(0x0008, "FlashSetting", "Flash setting"),
         MakerNote::MnTagInfo(0x0009, "FlashMode", "Flash mode"),
         MakerNote::MnTagInfo(0x000b, "WhiteBalanceBias", "White balance bias"),
-        MakerNote::MnTagInfo(0x000c, "ColorBalance1", "Color balance 1"),
         MakerNote::MnTagInfo(0x000e, "ExposureDiff", "Exposure difference"),
         MakerNote::MnTagInfo(0x000f, "ISOSelection", "ISO selection"),
-        MakerNote::MnTagInfo(0x000b, "DataDump", "Data dump"),
         MakerNote::MnTagInfo(0x0011, "ThumbOffset", "Thumbnail IFD offset"),
-        MakerNote::MnTagInfo(0x0012, "FlashComp", "Flash compensation setting"),
-        MakerNote::MnTagInfo(0x0013, "ISOSetting", "ISO speed setting"),
-        MakerNote::MnTagInfo(0x0016, "ImageBoundry", "Image boundry"),
-        MakerNote::MnTagInfo(0x0018, "FlashBracketComp", "Flash bracket compensation applied"),
-        MakerNote::MnTagInfo(0x0019, "ExposureBracketComp", "AE bracket compensation applied"),
+        MakerNote::MnTagInfo(0x0012, "FlashBias", "Flash bias"),
         MakerNote::MnTagInfo(0x0080, "ImageAdjustment", "Image adjustment setting"),
-        MakerNote::MnTagInfo(0x0081, "ToneComp", "Tone compensation setting (contrast)"),
-        MakerNote::MnTagInfo(0x0082, "AuxiliaryLens", "Auxiliary lens (adapter)"),
+        MakerNote::MnTagInfo(0x0081, "ToneComp", "Tone compensation setting"),
         MakerNote::MnTagInfo(0x0083, "LensType", "Lens type"),
         MakerNote::MnTagInfo(0x0084, "Lens", "Lens"),
         MakerNote::MnTagInfo(0x0085, "FocusDistance", "Manual focus distance"),
@@ -428,22 +391,11 @@ namespace Exiv2 {
         MakerNote::MnTagInfo(0x0087, "FlashType", "Type of flash used"),
         MakerNote::MnTagInfo(0x0088, "AFFocusPos", "AF focus position"),
         MakerNote::MnTagInfo(0x0089, "Bracketing", "Bracketing"),
-        MakerNote::MnTagInfo(0x008c, "NEFCurve1", "NEF curve 1"),
         MakerNote::MnTagInfo(0x008d, "ColorMode", "Color mode"),
-        MakerNote::MnTagInfo(0x008f, "SceneMode", "Scene mode"),
         MakerNote::MnTagInfo(0x0090, "LightingType", "Lighting type"),
-        MakerNote::MnTagInfo(0x0092, "HueAdjustment", "Hue adjustment"),
+        MakerNote::MnTagInfo(0x0092, "Hue", "Hue adjustment"),
         MakerNote::MnTagInfo(0x0094, "Saturation", "Saturation adjustment"),
         MakerNote::MnTagInfo(0x0095, "NoiseReduction", "Noise reduction"),
-        MakerNote::MnTagInfo(0x0096, "NEFCurve2", "NEF curve 2"),
-        MakerNote::MnTagInfo(0x0097, "ColorBalance2", "Color balance 2"),
-        MakerNote::MnTagInfo(0x0099, "NEFThumbnailSize", "NEF thumbnail size"),
-        MakerNote::MnTagInfo(0x00a0, "SerialNumber", "Camera serial number"),
-        MakerNote::MnTagInfo(0x00a7, "ShutterCount", "Number of shots taken by camera"),
-        MakerNote::MnTagInfo(0x00a9, "ImageOptimization", "Image optimization"),
-        MakerNote::MnTagInfo(0x00aa, "Saturation", "Saturation"),
-        MakerNote::MnTagInfo(0x00ab, "VariProgram", "Vari program"),
-        MakerNote::MnTagInfo(0x0e00, "PrintIM", "Print image matching"),
         // End of list marker
         MakerNote::MnTagInfo(0xffff, "(UnknownNikon3MnTag)", "Unknown Nikon3MakerNote tag")
     };
@@ -457,33 +409,6 @@ namespace Exiv2 {
             0x02, 0x10, 0x00, 0x00, 0x4d, 0x4d, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x08
         };
         readHeader(buf, 18, byteOrder_);
-    }
-
-    Nikon3MakerNote::Nikon3MakerNote(const Nikon3MakerNote& rhs)
-        : IfdMakerNote(rhs), ifdItem_(rhs.ifdItem_)
-    {
-    }
-
-    int Nikon3MakerNote::read(const byte* buf,
-                              long len, 
-                              ByteOrder byteOrder, 
-                              long offset)
-    {
-        int rc = IfdMakerNote::read(buf, len, byteOrder, offset);
-        if (rc) return rc;
-
-        // Todo: Add the tags and thumbnail from the embedded thumbnail IFD
-        //       Accessing them is easy, but we need support for more than
-        //       one IfdId in makernotes to get it working.
-//      Ifd thumbIfd(makerIfdId, 0, false);
-//      rc = ifd_.readSubIfd(thumbIfd, buf+10, len-10, byteOrder, 0x0011);
-//      if (rc) {
-//          std::cerr << "Didn't work :(\n";  
-//      }
-//      else {
-//          thumbIfd.print(std::cout);
-//      }
-        return 0;
     }
 
     int Nikon3MakerNote::readHeader(const byte* buf,
@@ -513,27 +438,17 @@ namespace Exiv2 {
         return rc;
     }
 
-    Nikon3MakerNote::AutoPtr Nikon3MakerNote::create(bool alloc) const
+    Nikon3MakerNote::AutoPtr Nikon3MakerNote::clone(bool alloc) const
     {
-        return AutoPtr(create_(alloc));
+        return AutoPtr(clone_(alloc));
     }
 
-    Nikon3MakerNote* Nikon3MakerNote::create_(bool alloc) const 
+    Nikon3MakerNote* Nikon3MakerNote::clone_(bool alloc) const 
     {
         AutoPtr makerNote(new Nikon3MakerNote(alloc)); 
         assert(makerNote.get() != 0);
         makerNote->readHeader(header_.pData_, header_.size_, byteOrder_);
         return makerNote.release();
-    }
-
-    Nikon3MakerNote::AutoPtr Nikon3MakerNote::clone() const
-    {
-        return AutoPtr(clone_());
-    }
-
-    Nikon3MakerNote* Nikon3MakerNote::clone_() const 
-    {
-        return new Nikon3MakerNote(*this);
     }
 
     std::ostream& Nikon3MakerNote::printTag(std::ostream& os, 
@@ -542,12 +457,9 @@ namespace Exiv2 {
     {
         switch (tag) {
         case 0x0002: print0x0002(os, value); break;
-        case 0x0012: print0x0012(os, value); break;
-        case 0x0013: print0x0002(os, value); break; // use 0x0002 print fct
-        case 0x0018: print0x0012(os, value); break; // use 0x0012 print fct
+        case 0x0083: print0x0083(os, value); break;
         case 0x0084: print0x0084(os, value); break;
         case 0x0087: print0x0087(os, value); break;
-        case 0x0088: print0x0088(os, value); break;
         case 0x0089: print0x0089(os, value); break;
         default:
             // All other tags (known or unknown) go here
@@ -569,29 +481,16 @@ namespace Exiv2 {
         return os;
     }
 
-    std::ostream& Nikon3MakerNote::print0x0012(std::ostream& os, 
+    std::ostream& Nikon3MakerNote::print0x0083(std::ostream& os,
                                                const Value& value)
     {
-        // From the PHP JPEG Metadata Toolkit
-        long fec = value.toLong();
-        switch (fec) {
-        case 0x06: os << "+1.0 EV"; break;
-        case 0x04: os << "+0.7 EV"; break;
-        case 0x03: os << "+0.5 EV"; break;
-        case 0x02: os << "+0.3 EV"; break;
-        case 0x00: os << "0.0 EV"; break;
-        case 0xfe: os << "-0.3 EV"; break;
-        case 0xfd: os << "-0.5 EV"; break;
-        case 0xfc: os << "-0.7 EV"; break;
-        case 0xfa: os << "-1.0 EV"; break;
-        case 0xf8: os << "-1.3 EV"; break;
-        case 0xf7: os << "-1.5 EV"; break;
-        case 0xf6: os << "-1.7 EV"; break;
-        case 0xf4: os << "-2.0 EV"; break;
-        case 0xf2: os << "-2.3 EV"; break;
-        case 0xf1: os << "-2.5 EV"; break;
-        case 0xf0: os << "-2.7 EV"; break;
-        case 0xee: os << "-3.0 EV"; break;
+        long type = value.toLong();
+        switch (type) {
+        case  0: os << "AF"; break;
+        case  1: os << "Manual"; break;
+        case  2: os << "AF-D"; break;
+        case  6: os << "AF-D G"; break;
+        case 10: os << "AF-D VR"; break;
         default: os << "(" << value << ")"; break;
         }
         return os;
@@ -624,48 +523,11 @@ namespace Exiv2 {
     std::ostream& Nikon3MakerNote::print0x0087(std::ostream& os,
                                                const Value& value)
     {
-        // From Exiftool
         long flash = value.toLong();
         switch (flash) {
-        case 0: os << "Not used"; break;
-        case 8: os << "Fired, commander mode"; break;
-        case 9: os << "Fired, TTL mode"; break;
-        default: os << "(" << value << ")"; break;
-        }
-        return os;
-    }
-
-    std::ostream& Nikon3MakerNote::print0x0088(std::ostream& os,
-                                               const Value& value)
-    {
-        // Mappings taken from Exiftool 
-        long afpos = value.toLong();
-        switch (afpos) {
-        case 0x0000: os << "Center"; break;
-        case 0x0100: os << "Top"; break;
-        case 0x0200: os << "Bottom"; break;
-        case 0x0300: os << "Left"; break;
-        case 0x0400: os << "Right"; break;
-        
-        // D70
-        case 0x00001: os << "Single area, center"; break;
-        case 0x10002: os << "Single area, top"; break;
-        case 0x20004: os << "Single area, bottom"; break;
-        case 0x30008: os << "Single area, left"; break;
-        case 0x40010: os << "Single area, right"; break;
-
-        case 0x1000001: os << "Dynamic area, center"; break;
-        case 0x1010002: os << "Dynamic area, top"; break;
-        case 0x1020004: os << "Dynamic area, bottom"; break;
-        case 0x1030008: os << "Dynamic area, left"; break;
-        case 0x1040010: os << "Dynamic area, right"; break;
-
-        case 0x2000001: os << "Closest subject, center"; break;
-        case 0x2010002: os << "Closest subject, top"; break;
-        case 0x2020004: os << "Closest subject, bottom"; break;
-        case 0x2030008: os << "Closest subject, left"; break;
-        case 0x2040010: os << "Closest subject, right"; break;
-
+        case 0: os << "None"; break;
+        case 7: os << "External"; break;
+        case 9: os << "On camera"; break;
         default: os << "(" << value << ")"; break;
         }
         return os;
@@ -674,16 +536,12 @@ namespace Exiv2 {
     std::ostream& Nikon3MakerNote::print0x0089(std::ostream& os,
                                                const Value& value)
     {
-        // From Exiftool
         long b = value.toLong();
         switch (b) {
-        case 0x00: os << "Single"; break;
-        case 0x01: os << "Continuous"; break;
-        case 0x02: os << "Delay"; break;
-        case 0x03: os << "Remote with delay"; break;
-        case 0x04: os << "Remote"; break;
-        case 0x16: os << "Exposure bracketing"; break;
-        case 0x64: os << "White balance bracketing"; break;
+        case  0: os << "None"; break;
+        case  1: os << "None"; break;
+        case 17: os << "Exposure"; break;
+        case 81: os << "White balance"; break;
         default: os << "(" << value << ")"; break;
         }
         return os;

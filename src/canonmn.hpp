@@ -97,16 +97,13 @@ namespace Exiv2 {
                  is required for the makernote entries.
          */
         CanonMakerNote(bool alloc =true);
-        //! Copy constructor
-        CanonMakerNote(const CanonMakerNote& rhs);
         //! Virtual destructor
         virtual ~CanonMakerNote() {}
         //@}
 
         //! @name Accessors
         //@{
-        AutoPtr create(bool alloc =true) const;
-        AutoPtr clone() const;
+        AutoPtr clone(bool alloc =true) const;
         //! Return the name of the makernote item ("Canon")
         std::string ifdItem() const { return ifdItem_; }
         std::ostream& printTag(std::ostream& os,
@@ -179,10 +176,8 @@ namespace Exiv2 {
         //@}
 
     private:
-        //! Internal virtual create function.
-        CanonMakerNote* create_(bool alloc =true) const;
         //! Internal virtual copy constructor.
-        CanonMakerNote* clone_() const;
+        CanonMakerNote* clone_(bool alloc =true) const;
 
         //! Structure used to auto-register the MakerNote.
         struct RegisterMakerNote {

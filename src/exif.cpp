@@ -36,12 +36,11 @@ EXIV2_RCSID("@(#) $Id$");
 // included header files
 #include "exif.hpp"
 #include "types.hpp"
-#include "basicio.hpp"
 #include "error.hpp"
 #include "value.hpp"
 #include "ifd.hpp"
 #include "tags.hpp"
-#include "jpgimage.hpp"
+#include "image.hpp"
 #include "makernote.hpp"
 
 // + standard includes
@@ -181,7 +180,7 @@ namespace Exiv2 {
         value_->read(value);
     }
 
-    int TiffThumbnail::setDataArea(ExifData& exifData, Ifd* pIfd1,
+    int TiffThumbnail::setDataArea(ExifData& exifData, Ifd& ifd1,
                                    const byte* buf, long len) const
     {
         // Create a DataBuf that can hold all strips
@@ -226,9 +225,9 @@ namespace Exiv2 {
         stripOffsets->setValue(os.str());
 
         // Set corresponding data area at IFD1, if it is a contiguous area
-        if (pIfd1 && firstOffset + totalSize == lastOffset + lastSize) {
-            Ifd::iterator pos = pIfd1->findTag(0x0111);
-            assert(pos != pIfd1->end());
+        if (firstOffset + totalSize == lastOffset + lastSize) {
+            Ifd::iterator pos = ifd1.findTag(0x0111);
+            assert(pos != ifd1.end());
             pos->setDataArea(buf + firstOffset, totalSize);
         }
 
@@ -265,7 +264,7 @@ namespace Exiv2 {
         return buf;
     }
 
-    int JpegThumbnail::setDataArea(ExifData& exifData, Ifd* pIfd1,
+    int JpegThumbnail::setDataArea(ExifData& exifData, Ifd& ifd1,
                                    const byte* buf, long len) const
     {
         ExifKey key("Exif.Thumbnail.JPEGInterchangeFormat");
@@ -279,13 +278,11 @@ namespace Exiv2 {
         if (len < offset + size) return 2;
         format->setDataArea(buf + offset, size);
         format->setValue("0");
-        if (pIfd1) {
-            Ifd::iterator pos = pIfd1->findTag(0x0201);
-            assert(pos != pIfd1->end());
-            pos->setDataArea(buf + offset, size);
-        }
+        Ifd::iterator pos = ifd1.findTag(0x0201);
+        assert(pos != ifd1.end());
+        pos->setDataArea(buf + offset, size);
         return 0;
-    } // JpegThumbnail::setDataArea
+    } // JpegThumbnail::read
 
     const char* JpegThumbnail::format() const
     {
@@ -306,108 +303,16 @@ namespace Exiv2 {
     }
 
     ExifData::ExifData() 
-        : pIfd0_(0), pExifIfd_(0), pIopIfd_(0), pGpsIfd_(0), pIfd1_(0), 
+        : ifd0_(ifd0Id, 0, false), 
+          exifIfd_(exifIfdId, 0, false), iopIfd_(iopIfdId, 0, false), 
+          gpsIfd_(gpsIfdId, 0, false), ifd1_(ifd1Id, 0, false), 
           size_(0), pData_(0), compatible_(true)
     {
     }
 
-    ExifData::ExifData(const ExifData& rhs)
-        : tiffHeader_(rhs.tiffHeader_), exifMetadata_(rhs.exifMetadata_),
-          pIfd0_(0), pExifIfd_(0), pIopIfd_(0), pGpsIfd_(0), pIfd1_(0), 
-          size_(0), pData_(0), compatible_(rhs.compatible_)
-    {
-        pData_ = new byte[rhs.size_];
-        size_ = rhs.size_;
-        memcpy(pData_, rhs.pData_, rhs.size_);
-
-        if (rhs.makerNote_.get() != 0) {
-            makerNote_ = rhs.makerNote_->clone();
-            makerNote_->updateBase(pData_);
-        }
-        if (rhs.pIfd0_) {
-            pIfd0_ = new Ifd(*rhs.pIfd0_);
-            pIfd0_->updateBase(pData_);
-        }
-        if (rhs.pExifIfd_) {
-            pExifIfd_ = new Ifd(*rhs.pExifIfd_);
-            pExifIfd_->updateBase(pData_);
-        }
-        if (rhs.pIopIfd_) {
-            pIopIfd_ = new Ifd(*rhs.pIopIfd_);
-            pIopIfd_->updateBase(pData_);
-        }
-        if (rhs.pGpsIfd_) {
-            pGpsIfd_ = new Ifd(*rhs.pGpsIfd_);
-            pGpsIfd_->updateBase(pData_);
-        }
-        if (rhs.pIfd1_) {
-            pIfd1_ = new Ifd(*rhs.pIfd1_);
-            pIfd1_->updateBase(pData_);
-        }
-    }
-
     ExifData::~ExifData()
     {
-        delete pIfd0_;
-        delete pExifIfd_;
-        delete pIopIfd_;
-        delete pGpsIfd_;
-        delete pIfd1_;
         delete[] pData_;
-    }
-
-    ExifData& ExifData::operator=(const ExifData& rhs)
-    {
-        if (this == &rhs) return *this;
-
-        tiffHeader_ = rhs.tiffHeader_;
-        exifMetadata_ = rhs.exifMetadata_;
-
-        size_ = 0;
-        delete[] pData_;
-        pData_ = new byte[rhs.size_];
-        size_ = rhs.size_;
-        memcpy(pData_, rhs.pData_, rhs.size_);
-
-        makerNote_.reset();
-        if (rhs.makerNote_.get() != 0) {
-            makerNote_ = rhs.makerNote_->clone();
-            makerNote_->updateBase(pData_);
-        }
-
-        delete pIfd0_;
-        pIfd0_ = 0;
-        if (rhs.pIfd0_) {
-            pIfd0_ = new Ifd(*rhs.pIfd0_);
-            pIfd0_->updateBase(pData_);
-        }
-        delete pExifIfd_;
-        pExifIfd_ = 0;
-        if (rhs.pExifIfd_) {
-            pExifIfd_ = new Ifd(*rhs.pExifIfd_);
-            pExifIfd_->updateBase(pData_);
-        }
-        delete pIopIfd_;
-        pIopIfd_ = 0;
-        if (rhs.pIopIfd_) {
-            pIopIfd_ = new Ifd(*rhs.pIopIfd_);
-            pIopIfd_->updateBase(pData_);
-        }
-        delete pGpsIfd_;
-        pGpsIfd_ = 0;
-        if (rhs.pGpsIfd_) {
-            pGpsIfd_ = new Ifd(*rhs.pGpsIfd_);
-            pGpsIfd_->updateBase(pData_);
-        }
-        delete pIfd1_;
-        pIfd1_ = 0;
-        if (rhs.pIfd1_) {
-            pIfd1_ = new Ifd(*rhs.pIfd1_);
-            pIfd1_->updateBase(pData_);
-        }
-
-        compatible_ = rhs.compatible_;
-        return *this;
     }
 
     Exifdatum& ExifData::operator[](const std::string& key)
@@ -421,7 +326,28 @@ namespace Exiv2 {
         return *pos;
     }
 
-    int ExifData::load(const byte* buf, long len)
+    int ExifData::read(const std::string& path)
+    {
+        if (!fileExists(path, true)) return -1;
+        Image::AutoPtr image = ImageFactory::instance().open(path);
+        if (image.get() == 0) {
+            // We don't know this type of file
+            return -2;
+        }
+
+        int rc = image->readMetadata();
+        if (rc == 0) {
+            if (image->sizeExifData() > 0) {
+                rc = read(image->exifData(), image->sizeExifData());
+            }
+            else {
+                rc = 3;
+            }
+        }
+        return rc;
+    }
+
+    int ExifData::read(const byte* buf, long len)
     {
         // Copy the data buffer
         delete[] pData_;
@@ -435,27 +361,19 @@ namespace Exiv2 {
         if (rc) return rc;
 
         // Read IFD0
-        delete pIfd0_;
-        pIfd0_ = new Ifd(ifd0Id, 0, false); 
-        assert(pIfd0_ != 0);
-        rc = pIfd0_->read(pData_ + tiffHeader_.offset(), 
-                          size_ - tiffHeader_.offset(), 
-                          byteOrder(), 
-                          tiffHeader_.offset());
+        rc = ifd0_.read(pData_ + tiffHeader_.offset(), 
+                        size_ - tiffHeader_.offset(), 
+                        byteOrder(), 
+                        tiffHeader_.offset());
         if (rc) return rc;
-
-        delete pExifIfd_;
-        pExifIfd_ = new Ifd(exifIfdId, 0, false);
-        assert(pExifIfd_ != 0);
         // Find and read ExifIFD sub-IFD of IFD0
-        rc = pIfd0_->readSubIfd(*pExifIfd_, pData_, size_, byteOrder(), 0x8769);
+        rc = ifd0_.readSubIfd(exifIfd_, pData_, size_, byteOrder(), 0x8769);
         if (rc) return rc;
         // Find MakerNote in ExifIFD, create a MakerNote class 
-        Ifd::iterator pos = pExifIfd_->findTag(0x927c);
-        Ifd::iterator make = pIfd0_->findTag(0x010f);
-        Ifd::iterator model = pIfd0_->findTag(0x0110);
-        if (   pos != pExifIfd_->end() 
-            && make != pIfd0_->end() && model != pIfd0_->end()) {
+        Ifd::iterator pos = exifIfd_.findTag(0x927c);
+        Ifd::iterator make = ifd0_.findTag(0x010f);
+        Ifd::iterator model = ifd0_.findTag(0x0110);
+        if (pos != exifIfd_.end() && make != ifd0_.end() && model != ifd0_.end()) {
             MakerNoteFactory& mnf = MakerNoteFactory::instance();
             // Todo: The conversion to string assumes that there is a \0 at the end
             // Todo: How to avoid the cast (is that a MSVC thing?)
@@ -465,14 +383,14 @@ namespace Exiv2 {
                                     pos->data(), 
                                     pos->size(),
                                     byteOrder(),
-                                    pExifIfd_->offset() + pos->offset());
+                                    exifIfd_.offset() + pos->offset());
         }
         // Read the MakerNote
         if (makerNote_.get() != 0) {
             rc = makerNote_->read(pos->data(), 
                                   pos->size(),
                                   byteOrder(),
-                                  pExifIfd_->offset() + pos->offset());
+                                  exifIfd_.offset() + pos->offset());
             if (rc) {
                 // Todo: How to handle debug output like this
                 std::cerr << "Warning: Failed to read " 
@@ -485,62 +403,82 @@ namespace Exiv2 {
         // If we successfully parsed the MakerNote, delete the raw MakerNote,
         // the parsed MakerNote is the primary MakerNote from now on
         if (makerNote_.get() != 0) {
-            pExifIfd_->erase(pos);
+            exifIfd_.erase(pos);
         }
-
-        delete pIopIfd_;
-        pIopIfd_ = new Ifd(iopIfdId, 0, false);
-        assert(pIopIfd_ != 0);
         // Find and read Interoperability IFD in ExifIFD
-        rc = pExifIfd_->readSubIfd(*pIopIfd_, pData_, size_, byteOrder(), 0xa005);
+        rc = exifIfd_.readSubIfd(iopIfd_, pData_, size_, byteOrder(), 0xa005);
         if (rc) return rc;
-
-        delete pGpsIfd_;
-        pGpsIfd_ = new Ifd(gpsIfdId, 0, false);
-        assert(pGpsIfd_ != 0);
         // Find and read GPSInfo sub-IFD in IFD0
-        rc = pIfd0_->readSubIfd(*pGpsIfd_, pData_, size_, byteOrder(), 0x8825);
+        rc = ifd0_.readSubIfd(gpsIfd_, pData_, size_, byteOrder(), 0x8825);
         if (rc) return rc;
-
-        delete pIfd1_;
-        pIfd1_ = new Ifd(ifd1Id, 0, false);
-        assert(pIfd1_ != 0);
         // Read IFD1
-        if (pIfd0_->next()) {
-            rc = pIfd1_->read(pData_ + pIfd0_->next(), 
-                              size_ - pIfd0_->next(), 
-                              byteOrder(), 
-                              pIfd0_->next());
+        if (ifd0_.next()) {
+            rc = ifd1_.read(pData_ + ifd0_.next(), 
+                            size_ - ifd0_.next(), 
+                            byteOrder(), 
+                            ifd0_.next());
             if (rc) return rc;
         }
         // Find and delete ExifIFD sub-IFD of IFD1
-        pos = pIfd1_->findTag(0x8769);
-        if (pos != pIfd1_->end()) {
-            pIfd1_->erase(pos);
+        pos = ifd1_.findTag(0x8769);
+        if (pos != ifd1_.end()) {
+            ifd1_.erase(pos);
             ret = 7;
         }
         // Find and delete GPSInfo sub-IFD in IFD1
-        pos = pIfd1_->findTag(0x8825);
-        if (pos != pIfd1_->end()) {
-            pIfd1_->erase(pos);
+        pos = ifd1_.findTag(0x8825);
+        if (pos != ifd1_.end()) {
+            ifd1_.erase(pos);
             ret = 7;
         }
         // Copy all entries from the IFDs and the MakerNote to the metadata
         exifMetadata_.clear();
-        add(pIfd0_->begin(), pIfd0_->end(), byteOrder());
-        add(pExifIfd_->begin(), pExifIfd_->end(), byteOrder());
+        add(ifd0_.begin(), ifd0_.end(), byteOrder());
+        add(exifIfd_.begin(), exifIfd_.end(), byteOrder());
         if (makerNote_.get() != 0) {
             add(makerNote_->begin(), makerNote_->end(), makerNote_->byteOrder());
         }
-        add(pIopIfd_->begin(), pIopIfd_->end(), byteOrder()); 
-        add(pGpsIfd_->begin(), pGpsIfd_->end(), byteOrder());
-        add(pIfd1_->begin(), pIfd1_->end(), byteOrder());
+        add(iopIfd_.begin(), iopIfd_.end(), byteOrder()); 
+        add(gpsIfd_.begin(), gpsIfd_.end(), byteOrder());
+        add(ifd1_.begin(), ifd1_.end(), byteOrder());
         // Read the thumbnail (but don't worry whether it was successful or not)
         readThumbnail();
 
         return ret;
-    } // ExifData::load
+    } // ExifData::read
 
+    int ExifData::erase(const std::string& path) const
+    {
+        if (!fileExists(path, true)) return -1;
+        Image::AutoPtr image = ImageFactory::instance().open(path);
+        if (image.get() == 0) return -2;
+
+        // Read all metadata then erase only Exif data
+        int rc = image->readMetadata();
+        if (rc == 0) {
+            image->clearExifData();
+            rc = image->writeMetadata();
+        }
+        return rc;
+    } // ExifData::erase
+
+    int ExifData::write(const std::string& path) 
+    {
+        // Remove the Exif section from the file if there is no metadata 
+        if (count() == 0) return erase(path);
+
+        if (!fileExists(path, true)) return -1;
+        Image::AutoPtr image = ImageFactory::instance().open(path);
+        if (image.get() == 0) return -2;
+        DataBuf buf(copy());
+        // Read all metadata to preserve non-Exif data
+        int rc = image->readMetadata();
+        if (rc == 0) {
+            image->setExifData(buf.pData_, buf.size_);
+            rc = image->writeMetadata();
+        }
+        return rc;
+    } // ExifData::write
 
     DataBuf ExifData::copy()
     {
@@ -577,7 +515,7 @@ namespace Exiv2 {
         MakerNote::AutoPtr makerNote;
         if (makerNote_.get() != 0) {
             // Build MakerNote from metadata
-            makerNote = makerNote_->create();
+            makerNote = makerNote_->clone();
             addToMakerNote(makerNote.get(), 
                            begin(), end(), 
                            makerNote_->byteOrder());
@@ -692,6 +630,15 @@ namespace Exiv2 {
         assert(size == buf.size_);
         return buf;
     } // ExifData::copyFromMetadata
+
+    int ExifData::writeExifData(const std::string& path)
+    {
+        DataBuf buf(copy());
+        ExvImage exvImage(path, true);
+        if (!exvImage.good()) return -1;
+        exvImage.setExifData(buf.pData_, buf.size_);
+        return exvImage.writeMetadata();
+    } // ExifData::writeExifData
 
     void ExifData::add(Entries::const_iterator begin, 
                        Entries::const_iterator end,
@@ -811,27 +758,24 @@ namespace Exiv2 {
         long delta = 0;
         if (stp) {
             delta = size_;
-            if (size_ > 0 && pIfd0_ && pIfd0_->next() > 0) {
+            if (size_ > 0 && ifd0_.next() > 0) {
                 // Truncate IFD1 and thumbnail data from the data buffer
-                size_ = pIfd0_->next();
-                pIfd0_->setNext(0, byteOrder());
-                if (pIfd1_) pIfd1_->clear();
+                size_ = ifd0_.next();
+                ifd0_.setNext(0, byteOrder());
+                ifd1_.clear();
             }
             delta -= size_;
         }
         else {
             // We will have to write the hard way and re-arrange the data
             compatible_ = false;
-            if (pIfd1_) delta = pIfd1_->size() + pIfd1_->dataSize();
+            delta = ifd1_.size() + ifd1_.dataSize();
         }
         return delta;
     } // ExifData::eraseThumbnail
 
     bool ExifData::stdThumbPosition() const
     {
-        if (   pIfd0_ == 0 || pExifIfd_ == 0 || pIopIfd_ == 0 
-            || pGpsIfd_ == 0 || pIfd1_ == 0) return true;
-
         // Todo: There is still an invalid assumption here: The data of an IFD
         //       can be stored in multiple non-contiguous blocks. In this case,
         //       dataOffset + dataSize does not point to the end of the IFD data.
@@ -841,23 +785,23 @@ namespace Exiv2 {
         Thumbnail::AutoPtr thumbnail = getThumbnail();
         if (thumbnail.get()) {
             long maxOffset;
-            maxOffset = std::max(pIfd0_->offset(), pIfd0_->dataOffset());
-            maxOffset = std::max(maxOffset, pExifIfd_->offset());
-            maxOffset = std::max(maxOffset,   pExifIfd_->dataOffset() 
-                                            + pExifIfd_->dataSize());
+            maxOffset = std::max(ifd0_.offset(), ifd0_.dataOffset());
+            maxOffset = std::max(maxOffset, exifIfd_.offset());
+            maxOffset = std::max(maxOffset,   exifIfd_.dataOffset() 
+                                            + exifIfd_.dataSize());
             if (makerNote_.get() != 0) {
                 maxOffset = std::max(maxOffset,   makerNote_->offset()
                                                 + makerNote_->size());
             }
-            maxOffset = std::max(maxOffset, pIopIfd_->offset());
-            maxOffset = std::max(maxOffset,   pIopIfd_->dataOffset()
-                                            + pIopIfd_->dataSize());
-            maxOffset = std::max(maxOffset, pGpsIfd_->offset());
-            maxOffset = std::max(maxOffset,   pGpsIfd_->dataOffset()
-                                            + pGpsIfd_->dataSize());
+            maxOffset = std::max(maxOffset, iopIfd_.offset());
+            maxOffset = std::max(maxOffset,   iopIfd_.dataOffset()
+                                            + iopIfd_.dataSize());
+            maxOffset = std::max(maxOffset, gpsIfd_.offset());
+            maxOffset = std::max(maxOffset,   gpsIfd_.dataOffset()
+                                            + gpsIfd_.dataSize());
 
-            if (   maxOffset > pIfd1_->offset()
-                || maxOffset > pIfd1_->dataOffset() && pIfd1_->dataOffset() > 0)
+            if (   maxOffset > ifd1_.offset()
+                || maxOffset > ifd1_.dataOffset() && ifd1_.dataOffset() > 0)
                 rc = false;
             /*
                Todo: Removed condition from the above if(). Should be re-added...
@@ -873,11 +817,11 @@ namespace Exiv2 {
         if (thumbnail.get() == 0) return 8;
 
         std::string name = path + thumbnail->extension();
-        FileIo file(name);
-        if (file.open("wb") != 0) return -1;
+        FileCloser file(fopen(name.c_str(), "wb"));
+        if (!file.fp_) return -1;
 
         DataBuf buf(thumbnail->copy(*this));
-        if (file.write(buf.pData_, buf.size_) != buf.size_) {
+        if (fwrite(buf.pData_, 1, buf.size_, file.fp_) != (size_t)buf.size_) {
             return 4;
         }
         return 0;
@@ -926,7 +870,7 @@ namespace Exiv2 {
         int rc = -1;
         Thumbnail::AutoPtr thumbnail = getThumbnail();
         if (thumbnail.get() != 0) {
-            rc = thumbnail->setDataArea(*this, pIfd1_, pData_, size_);
+            rc = thumbnail->setDataArea(*this, ifd1_, pData_, size_);
         }
         return rc;
 
@@ -934,21 +878,19 @@ namespace Exiv2 {
 
     bool ExifData::updateEntries()
     {
-        if (   pIfd0_ == 0 || pExifIfd_ == 0 || pIopIfd_ == 0 
-            || pGpsIfd_ == 0 || pIfd1_ == 0) return false;
         if (!this->compatible()) return false;
 
         bool compatible = true;
-        compatible &= updateRange(pIfd0_->begin(), pIfd0_->end(), byteOrder());
-        compatible &= updateRange(pExifIfd_->begin(), pExifIfd_->end(), byteOrder());
+        compatible &= updateRange(ifd0_.begin(), ifd0_.end(), byteOrder());
+        compatible &= updateRange(exifIfd_.begin(), exifIfd_.end(), byteOrder());
         if (makerNote_.get() != 0) {
             compatible &= updateRange(makerNote_->begin(), 
                                       makerNote_->end(), 
                                       makerNote_->byteOrder());
         }
-        compatible &= updateRange(pIopIfd_->begin(), pIopIfd_->end(), byteOrder());
-        compatible &= updateRange(pGpsIfd_->begin(), pGpsIfd_->end(), byteOrder());
-        compatible &= updateRange(pIfd1_->begin(), pIfd1_->end(), byteOrder());
+        compatible &= updateRange(iopIfd_.begin(), iopIfd_.end(), byteOrder());
+        compatible &= updateRange(gpsIfd_.begin(), gpsIfd_.end(), byteOrder());
+        compatible &= updateRange(ifd1_.begin(), ifd1_.end(), byteOrder());
 
         return compatible;
     } // ExifData::updateEntries
@@ -1042,7 +984,7 @@ namespace Exiv2 {
             return rc;
         }
         const Ifd* ifd = getIfd(ifdId);
-        if (ifd && ifdId != makerIfdId) {
+        if (ifdId != makerIfdId && ifd) {
             entry = ifd->findIdx(idx);
             if (entry != ifd->end()) {
                 rc.first = true;
@@ -1057,19 +999,19 @@ namespace Exiv2 {
         const Ifd* ifd = 0;
         switch (ifdId) {
         case ifd0Id: 
-            ifd = pIfd0_;
+            ifd = &ifd0_;
             break;
         case exifIfdId: 
-            ifd = pExifIfd_;
+            ifd = &exifIfd_;
             break;
         case iopIfdId: 
-            ifd = pIopIfd_;
+            ifd = &iopIfd_;
             break;
         case gpsIfdId: 
-            ifd = pGpsIfd_;
+            ifd = &gpsIfd_;
             break;
         case ifd1Id: 
-            ifd = pIfd1_;
+            ifd = &ifd1_;
             break;
         default:
             ifd = 0;
@@ -1226,14 +1168,14 @@ namespace {
 
     Exiv2::DataBuf readFile(const std::string& path)
     {
-        Exiv2::FileIo file(path);
-        if (file.open("rb") != 0) 
+        Exiv2::FileCloser file(fopen(path.c_str(), "rb"));
+        if (!file.fp_) 
             throw Exiv2::Error("Couldn't open input file");
         struct stat st;
         if (0 != stat(path.c_str(), &st))
             throw Exiv2::Error("Couldn't stat input file");
         Exiv2::DataBuf buf(st.st_size);
-        long len = file.read(buf.pData_, buf.size_);
+        long len = (long)fread(buf.pData_, 1, buf.size_, file.fp_);
         if (len != buf.size_) 
             throw Exiv2::Error("Couldn't read input file");
         return buf; 

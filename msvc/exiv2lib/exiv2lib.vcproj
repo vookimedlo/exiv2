@@ -107,9 +107,6 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath="..\..\src\basicio.cpp">
-			</File>
-			<File
 				RelativePath="..\..\src\canonmn.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -189,9 +186,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\iptc.cpp">
-			</File>
-			<File
-				RelativePath="..\..\src\jpgimage.cpp">
 			</File>
 			<File
 				RelativePath="..\..\src\makernote.cpp">
@@ -295,9 +289,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath="..\..\src\basicio.hpp">
-			</File>
-			<File
 				RelativePath="..\..\src\canonmn.hpp">
 			</File>
 			<File
@@ -323,9 +314,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\iptc.hpp">
-			</File>
-			<File
-				RelativePath="..\..\src\jpgimage.hpp">
 			</File>
 			<File
 				RelativePath="..\..\src\makernote.hpp">

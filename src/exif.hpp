@@ -354,7 +354,7 @@ namespace Exiv2 {
                  \em buf. Return 0 if successful.
 
           @param exifData Exif data corresponding to the data buffer.
-          @param pIfd1 Corresponding raw IFD1.
+          @param ifd1 Corresponding raw IFD1.
           @param buf Data buffer containing the thumbnail data. The buffer must
                  start with the TIFF header.
           @param len Number of bytes in the data buffer.
@@ -363,7 +363,7 @@ namespace Exiv2 {
                   2 if the data area is outside of the data buffer
          */
         virtual int setDataArea(ExifData& exifData, 
-                                Ifd* pIfd1,
+                                Ifd& ifd1,
                                 const byte* buf,
                                 long len) const =0;
         /*!
@@ -410,7 +410,7 @@ namespace Exiv2 {
         //! @name Accessors
         //@{
         int setDataArea(ExifData& exifData, 
-                        Ifd* pIfd1, 
+                        Ifd& ifd1, 
                         const byte* buf,
                         long len) const;
         DataBuf copy(const ExifData& exifData) const;
@@ -435,7 +435,7 @@ namespace Exiv2 {
         //! @name Accessors
         //@{
         int setDataArea(ExifData& exifData, 
-                        Ifd* pIfd1, 
+                        Ifd& ifd1, 
                         const byte* buf,
                         long len) const;
         DataBuf copy(const ExifData& exifData) const;
@@ -480,6 +480,13 @@ namespace Exiv2 {
       - extract and delete Exif thumbnail (JPEG and TIFF thumbnails)
     */
     class ExifData {
+        //! @name Not implemented
+        //@{
+        //! Copy constructor
+        ExifData(const ExifData& rhs);
+        //! Assignment operator
+        ExifData& operator=(const ExifData& rhs);
+        //@}
     public:
         //! ExifMetadata iterator type
         typedef ExifMetadata::iterator iterator;
@@ -490,24 +497,50 @@ namespace Exiv2 {
         //@{
         //! Default constructor
         ExifData();
-        //! Copy constructor (Todo: copy image data also)
-        ExifData(const ExifData& rhs);
         //! Destructor
         ~ExifData();
         //@}
 
         //! @name Manipulators
         //@{
-        //! Assignment operator (Todo: assign image data also)
-        ExifData& operator=(const ExifData& rhs);
         /*!
-          @brief Load the Exif data from a byte buffer. The data buffer
+          @brief Read the Exif data from file \em path.
+          @param path Path to the file
+          @return  0 if successful;<BR>
+                   3 if the file contains no Exif data;<BR>
+                  the return code of Image::readMetadata()
+                    if the call to this function fails<BR>
+                  the return code of read(const char* buf, long len)
+                    if the call to this function fails
+         */
+        int read(const std::string& path);
+        /*!
+          @brief Read the Exif data from a byte buffer. The data buffer
                  must start with the TIFF header.
           @param buf Pointer to the data buffer to read from
           @param len Number of bytes in the data buffer 
           @return 0 if successful.
          */
-        int load(const byte* buf, long len);
+        int read(const byte* buf, long len);
+        /*!
+          @brief Write the Exif data to file \em path. If an Exif data section
+                 already exists in the file, it is replaced.  If there is no
+                 metadata and no thumbnail to write, the Exif data section is
+                 deleted from the file.  Otherwise, an Exif data section is
+                 created. See copy(byte* buf) for further details.
+
+          @return 0 if successful.
+         */
+        int write(const std::string& path);
+        /*!
+          @brief Write the Exif data to a binary file. By convention, the
+                 filename extension should be ".exv". This file format contains
+                 the Exif data as it is found in a JPEG file, starting with the
+                 APP1 marker 0xffe1, the size of the data and the string
+                 "Exif\0\0". Exv files can be read with 
+                 int read(const std::string& path) just like image Exif data.
+         */
+        int writeExifData(const std::string& path);
         /*!
           @brief Write the Exif data to a data buffer, which is returned.  The
                  caller owns this copy and %DataBuf ensures that it will be
@@ -570,11 +603,6 @@ namespace Exiv2 {
                  by this call.
          */
         iterator erase(iterator pos);
-        /*!
-          @brief Delete all Exifdatum instances resulting in an empty container.
-                 Note that this also removes thumbnails.
-         */
-        void clear() { eraseThumbnail(); exifMetadata_.clear(); }
         //! Sort metadata by key
         void sortByKey();
         //! Sort metadata by tag
@@ -681,6 +709,12 @@ namespace Exiv2 {
 
         //! @name Accessors
         //@{
+        /*!
+          @brief Erase the Exif data section from file \em path. 
+          @param path Path to the file.
+          @return 0 if successful.
+         */
+        int erase(const std::string& path) const;
         //! Begin of the metadata
         const_iterator begin() const { return exifMetadata_.begin(); }
         //! End of the metadata
@@ -746,13 +780,14 @@ namespace Exiv2 {
 
         /*!
           @brief Convert the return code \em rc from \n 
-                 int read(const byte* buf, long len), \n
+                 int read(const std::string& path); \n
+                 int write(const std::string& path); \n
+                 int writeExifData(const std::string& path); \n
+                 int writeThumbnail(const std::string& path) const; and \n
+                 int erase(const std::string& path) const \n
                  into an error message.
-          @param rc Error code.
-          @param path %Image file or other identifying string.
-          @return String containing error message.
 
-          Todo: Implement global handling of error messages
+                 Todo: Implement global handling of error messages
          */
         static std::string strError(int rc, const std::string& path);
 
@@ -834,18 +869,17 @@ namespace Exiv2 {
         // DATA
         TiffHeader tiffHeader_;
         ExifMetadata exifMetadata_;
-
         //! Pointer to the MakerNote
         std::auto_ptr<MakerNote> makerNote_;
 
-        Ifd* pIfd0_;                   //! Pointer to Ifd0
-        Ifd* pExifIfd_;                //! Pointer to ExifIfd
-        Ifd* pIopIfd_;                 //! Pointer to IopIfd
-        Ifd* pGpsIfd_;                 //! Pointer to GpsIfd
-        Ifd* pIfd1_;                   //! Pointer to Ifd1
+        Ifd ifd0_;
+        Ifd exifIfd_;
+        Ifd iopIfd_;
+        Ifd gpsIfd_;
+        Ifd ifd1_;
 
-        long size_;                    //!< Size of the Exif raw data in bytes
-        byte* pData_;                  //!< Exif raw data buffer
+        long size_;              //!< Size of the Exif raw data in bytes
+        byte* pData_;            //!< Exif raw data buffer
 
         /*!
           Can be set to false to indicate that non-intrusive writing is not

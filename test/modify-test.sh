@@ -1,7 +1,7 @@
 #! /bin/sh
-# Test driver for exifdata copy construction and assignment unit tests 
-results="./tmp/exifdata-test.out"
-good="./data/exifdata-test.out"
+# Test driver for write unit tests to build Exif metadata from scratch
+results="./tmp/modify-test.out"
+good="./data/modify-test.out"
 diffargs="--strip-trailing-cr"
 tmpfile=tmp/ttt
 touch $tmpfile
@@ -11,13 +11,15 @@ if [ $? -ne 0 ] ; then
 fi
 (
 LD_LIBRARY_PATH=../../src:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH
 binpath="../../src"
+cp -f ./data/exiv2-empty.jpg ./tmp
 cp -f ./data/exiv2-gc.jpg ./tmp
-cp -f ./data/exiv2-canon-powershot-s40.jpg ./tmp
 cd ./tmp
-$binpath/exifdata-test exiv2-gc.jpg
-$binpath/exifdata-test exiv2-canon-powershot-s40.jpg
+$binpath/exiv2 -v -m ../data/modifycmd1.txt exiv2-empty.jpg
+$binpath/exiv2 -v -m ../data/modifycmd2.txt exiv2-gc.jpg
+$binpath/exiv2 -v -pi exiv2-empty.jpg
+$binpath/exiv2 -v -pt exiv2-empty.jpg exiv2-gc.jpg
+
 ) > $results
 
 diff -q $diffargs $results $good
