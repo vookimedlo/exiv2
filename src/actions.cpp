@@ -39,7 +39,6 @@ EXIV2_RCSID("@(#) $Id$");
 #endif
 
 #include "actions.hpp"
-#include "image.hpp"
 #include "exiv2.hpp"
 #include "utils.hpp"
 #include "types.hpp"
@@ -168,24 +167,13 @@ namespace Action {
 
     int Print::printSummary()
     {
-        if (!Util::fileExists(path_, true)) {
-            std::cerr << path_
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path_);
-        if (image.get() == 0) {
-            std::cerr << path_
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::ExifData exifData;
+        int rc = exifData.read(path_);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path_) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path_) << "\n";
             return rc;
         }
 
-        Exiv2::ExifData &exifData = image->exifData();
         align_ = 16;
 
         // Filename
@@ -279,7 +267,7 @@ namespace Action {
         // Subject distance
         std::cout << std::setw(align_) << std::setfill(' ') << std::left
                   << "Subject distance" << ": ";
-        if (0 == printTag(exifData, "Exif.Photo.SubjectDistance")) {
+	if (0 == printTag(exifData, "Exif.Photo.SubjectDistance")) {
             md = exifData.findKey(
                 Exiv2::ExifKey("Exif.Canon.CameraSettings2"));
             if (md != exifData.end() && md->count() >= 19) {
@@ -458,24 +446,13 @@ namespace Action {
 
     int Print::printInterpreted()
     {
-        if (!Util::fileExists(path_, true)) {
-            std::cerr << path_
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path_);
-        if (image.get() == 0) {
-            std::cerr << path_
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::ExifData exifData;
+        int rc = exifData.read(path_);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path_) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path_) << "\n";
             return rc;
         }
 
-        Exiv2::ExifData &exifData = image->exifData();
         Exiv2::ExifData::const_iterator md;
         for (md = exifData.begin(); md != exifData.end(); ++md) {
             std::cout << "0x" << std::setw(4) << std::setfill('0') << std::right
@@ -492,24 +469,13 @@ namespace Action {
 
     int Print::printValues()
     {
-        if (!Util::fileExists(path_, true)) {
-            std::cerr << path_
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path_);
-        if (image.get() == 0) {
-            std::cerr << path_
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::ExifData exifData;
+        int rc = exifData.read(path_);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path_) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path_) << "\n";
             return rc;
         }
 
-        Exiv2::ExifData &exifData = image->exifData();
         Exiv2::ExifData::const_iterator end = exifData.end();
         Exiv2::ExifData::const_iterator md;
         for (md = exifData.begin(); md != end; ++md) {
@@ -533,24 +499,13 @@ namespace Action {
 
     int Print::printIptc()
     {
-        if (!Util::fileExists(path_, true)) {
-            std::cerr << path_
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path_);
-        if (image.get() == 0) {
-            std::cerr << path_
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::IptcData iptcData;
+        int rc = iptcData.read(path_);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path_) << "\n";
+            std::cerr << Exiv2::IptcData::strError(rc, path_) << "\n";
             return rc;
         }
 
-        Exiv2::IptcData &iptcData = image->iptcData();
         Exiv2::IptcData::const_iterator end = iptcData.end();
         Exiv2::IptcData::const_iterator md;
         for (md = iptcData.begin(); md != end; ++md) {
@@ -574,24 +529,13 @@ namespace Action {
 
     int Print::printHexdump()
     {
-        if (!Util::fileExists(path_, true)) {
-            std::cerr << path_
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path_);
-        if (image.get() == 0) {
-            std::cerr << path_
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::ExifData exifData;
+        int rc = exifData.read(path_);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path_) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path_) << "\n";
             return rc;
         }
 
-        Exiv2::ExifData &exifData = image->exifData();
         Exiv2::ExifData::const_iterator md;
         for (md = exifData.begin(); md != exifData.end(); ++md) {
             std::cout << std::setw(4) << std::setfill(' ') << std::left
@@ -623,7 +567,7 @@ namespace Action {
                       << ": Failed to open the file\n";
             return -1;
         }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path_);
+        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::instance().open(path_);
         if (image.get() == 0) {
             std::cerr << path_
                       << ": The file contains data of an unknown image type\n";
@@ -654,24 +598,12 @@ namespace Action {
 
     int Rename::run(const std::string& path)
     try {
-        if (!Util::fileExists(path, true)) {
-            std::cerr << path
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path);
-        if (image.get() == 0) {
-            std::cerr << path
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::ExifData exifData;
+        int rc = exifData.read(path);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path) << "\n";
             return rc;
         }
-
-        Exiv2::ExifData &exifData = image->exifData();
         Exiv2::ExifKey key("Exif.Photo.DateTimeOriginal");
         Exiv2::ExifData::iterator md = exifData.findKey(key);
         if (md == exifData.end()) {
@@ -751,13 +683,8 @@ namespace Action {
     try {
         path_ = path;
 
-        if (!Util::fileExists(path_, true)) {
-            std::cerr << path_
-                      << ": Failed to open the file\n";
-            return -1;
-        }
         Exiv2::Image::AutoPtr image 
-            = Exiv2::ImageFactory::open(path_);
+            = Exiv2::ImageFactory::instance().open(path_);
         if (image.get() == 0) {
             std::cerr << path_
                       << ": The file contains data of an unknown image type\n";
@@ -783,7 +710,7 @@ namespace Action {
         if (0 == rc) {
             rc = image->writeMetadata();
             if (rc) {
-                std::cerr << Exiv2::Image::strError(rc, path_) << "\n";
+                std::cerr << Exiv2::ExifData::strError(rc, path_) << "\n";
             }
         }
 
@@ -798,22 +725,33 @@ namespace Action {
 
     int Erase::eraseThumbnail(Exiv2::Image* image) const
     {
-        Exiv2::ExifData &exifData = image->exifData();
-        std::string thumbExt = exifData.thumbnailExtension();
-        if (thumbExt.empty()) {
+        if (image->sizeExifData() == 0) {
             return 0;
         }
-        long delta = exifData.eraseThumbnail();
-        if (Params::instance().verbose_) {
-            std::cout << "Erasing " << delta 
-                        << " Bytes of thumbnail data" << std::endl;
+        int rc = 0;
+        Exiv2::ExifData exifData;
+        rc = exifData.read(image->exifData(), image->sizeExifData());
+        if (rc) {
+            std::cerr << Exiv2::ExifData::strError(rc, path_) << "\n";
         }
-        return 0;
+        if (0 == rc) {
+            std::string thumbExt = exifData.thumbnailExtension();
+            if (!thumbExt.empty()) {
+                long delta = exifData.eraseThumbnail();
+                if (Params::instance().verbose_) {
+                    std::cout << "Erasing " << delta 
+                              << " Bytes of thumbnail data" << std::endl;
+                }
+                Exiv2::DataBuf buf(exifData.copy());
+                image->setExifData(buf.pData_, buf.size_);
+            }
+        }
+        return rc;
     }
 
     int Erase::eraseExifData(Exiv2::Image* image) const
     {
-        if (Params::instance().verbose_ && image->exifData().count() > 0) {
+        if (Params::instance().verbose_ && image->sizeExifData() > 0) {
             std::cout << "Erasing Exif data from the file" << std::endl; 
         }
         image->clearExifData();
@@ -822,7 +760,7 @@ namespace Action {
 
     int Erase::eraseIptcData(Exiv2::Image* image) const
     {
-        if (Params::instance().verbose_ && image->iptcData().count() > 0) {
+        if (Params::instance().verbose_ && image->sizeIptcData() > 0) {
             std::cout << "Erasing Iptc data from the file" << std::endl; 
         }
         image->clearIptcData();
@@ -878,24 +816,12 @@ namespace Action {
 
     int Extract::writeThumbnail() const
     {
-        if (!Util::fileExists(path_, true)) {
-            std::cerr << path_
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path_);
-        if (image.get() == 0) {
-            std::cerr << path_
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::ExifData exifData;
+        int rc = exifData.read(path_);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path_) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path_) << "\n";
             return rc;
         }
-        Exiv2::ExifData &exifData = image->exifData();
-
         std::string thumb =   Util::dirname(path_) + SEPERATOR_STR
                             + Util::basename(path_, true) + "-thumb";
         std::string thumbExt = exifData.thumbnailExtension();
@@ -972,26 +898,14 @@ namespace Action {
                       << ": Failed to open the file\n";
             return -1;
         }
-        if (!Util::fileExists(path, true)) {
-            std::cerr << path
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path);
-        if (image.get() == 0) {
-            std::cerr << path
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::ExifData exifData;
+        int rc = exifData.read(path);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path) << "\n";
             return rc;
         }
-
-        Exiv2::ExifData &exifData = image->exifData();
         exifData.setJpegThumbnail(thumbPath);
-        return image->writeMetadata();
+        return exifData.write(path);
 
     } // Insert::insertThumbnail
 
@@ -1012,17 +926,10 @@ namespace Action {
                       << ": Failed to open the file\n";
             return -1;
         }
-        image_ = Exiv2::ImageFactory::open(path);
-        if (image_.get() == 0) {
-            std::cerr << path
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image_->readMetadata();
-        if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path) << "\n";
-            return rc;
-        }
+
+        // Read both exif and iptc metadata (ignore return code)
+        exifData_.read(path);
+        iptcData_.read(path);
 
         // loop through command table and apply each command
         ModifyCmds& modifyCmds = Params::instance().modifyCmds_;
@@ -1046,9 +953,13 @@ namespace Action {
         }
 
         // Save both exif and iptc metadata
-        rc = image_->writeMetadata();
+        int rc = exifData_.write(path);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path) << "\n";
+        }
+        rc = iptcData_.write(path);
+        if (rc) {
+            std::cerr << Exiv2::IptcData::strError(rc, path) << "\n";
         }
         return rc;
     }
@@ -1070,10 +981,10 @@ namespace Action {
         Exiv2::Value::AutoPtr value = Exiv2::Value::create(modifyCmd.typeId_);
         value->read(modifyCmd.value_);
         if (modifyCmd.metadataId_ == exif) {
-            image_->exifData().add(Exiv2::ExifKey(modifyCmd.key_), value.get());
+            exifData_.add(Exiv2::ExifKey(modifyCmd.key_), value.get());
         }
         if (modifyCmd.metadataId_ == iptc) {
-            image_->iptcData().add(Exiv2::IptcKey(modifyCmd.key_), value.get());
+            iptcData_.add(Exiv2::IptcKey(modifyCmd.key_), value.get());
         }
     }
 
@@ -1085,15 +996,12 @@ namespace Action {
                       << Exiv2::TypeInfo::typeName(modifyCmd.typeId_) 
                       << ")" << std::endl; 
         }
-
-        Exiv2::ExifData &exifData = image_->exifData();
-        Exiv2::IptcData &iptcData = image_->iptcData();
         Exiv2::Metadatum* metadatum = 0;
         if (modifyCmd.metadataId_ == exif) {
-            metadatum = &exifData[modifyCmd.key_];
+            metadatum = &exifData_[modifyCmd.key_];
         }
         if (modifyCmd.metadataId_ == iptc) {
-            metadatum = &iptcData[modifyCmd.key_];
+            metadatum = &iptcData_[modifyCmd.key_];
         }
         assert(metadatum);
         Exiv2::Value::AutoPtr value = metadatum->getValue();
@@ -1112,18 +1020,15 @@ namespace Action {
         if (Params::instance().verbose_) {
             std::cout << "Del " << modifyCmd.key_ << std::endl; 
         }
-
-        Exiv2::ExifData &exifData = image_->exifData();
-        Exiv2::IptcData &iptcData = image_->iptcData();
         if (modifyCmd.metadataId_ == exif) {
             Exiv2::ExifData::iterator pos =
-                exifData.findKey(Exiv2::ExifKey(modifyCmd.key_));
-            if (pos != exifData.end()) exifData.erase(pos);
+                exifData_.findKey(Exiv2::ExifKey(modifyCmd.key_));
+            if (pos != exifData_.end()) exifData_.erase(pos);
         }
         if (modifyCmd.metadataId_ == iptc) {
             Exiv2::IptcData::iterator pos =
-                iptcData.findKey(Exiv2::IptcKey(modifyCmd.key_));
-            if (pos != iptcData.end()) iptcData.erase(pos);
+                iptcData_.findKey(Exiv2::IptcKey(modifyCmd.key_));
+            if (pos != iptcData_.end()) iptcData_.erase(pos);
         }
     }
 
@@ -1141,31 +1046,19 @@ namespace Action {
     try {
         adjustment_ = Params::instance().adjustment_;
 
-        if (!Util::fileExists(path, true)) {
-            std::cerr << path
-                      << ": Failed to open the file\n";
-            return -1;
-        }
-        Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(path);
-        if (image.get() == 0) {
-            std::cerr << path
-                      << ": The file contains data of an unknown image type\n";
-            return -2;
-        }
-        int rc = image->readMetadata();
+        Exiv2::ExifData exifData;
+        int rc = exifData.read(path);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path) << "\n";
             return rc;
         }
-
-        Exiv2::ExifData &exifData = image->exifData();
         rc  = adjustDateTime(exifData, "Exif.Image.DateTime", path);
         rc += adjustDateTime(exifData, "Exif.Photo.DateTimeOriginal", path);
         rc += adjustDateTime(exifData, "Exif.Photo.DateTimeDigitized", path);
         if (rc) return 1;
-        rc = image->writeMetadata();
+        rc = exifData.write(path);
         if (rc) {
-            std::cerr << Exiv2::Image::strError(rc, path) << "\n";
+            std::cerr << Exiv2::ExifData::strError(rc, path) << "\n";
         }
         return rc;
     }
@@ -1289,7 +1182,7 @@ namespace {
             return -1;
         }
         Exiv2::Image::AutoPtr sourceImage 
-            = Exiv2::ImageFactory::open(source);
+            = Exiv2::ImageFactory::instance().open(source);
         if (sourceImage.get() == 0) {
             std::cerr << source
                       << ": The file contains data of an unknown image type\n";
@@ -1302,7 +1195,7 @@ namespace {
             return 1;
         }
         Exiv2::Image::AutoPtr targetImage 
-            = Exiv2::ImageFactory::open(target);
+            = Exiv2::ImageFactory::instance().open(target);
         if (preserve && targetImage.get() != 0) {
             if (targetImage->readMetadata()) {
                 std::cerr << target
@@ -1312,7 +1205,7 @@ namespace {
         }
         if (targetImage.get() == 0) {
             targetImage 
-                = Exiv2::ImageFactory::create(Exiv2::Image::exv, target);
+                = Exiv2::ImageFactory::instance().create(Exiv2::Image::exv, target);
         }
         if (targetImage.get() == 0) {
             std::cerr << target 
@@ -1320,20 +1213,22 @@ namespace {
             return 2;
         }
         if (   Params::instance().target_ & Params::ctExif
-            && sourceImage->exifData().count() > 0) {
+            && sourceImage->sizeExifData() > 0) {
             if (Params::instance().verbose_) {
                 std::cout << "Writing Exif data from " << source 
                           << " to " << target << std::endl;
             }
-            targetImage->setExifData(sourceImage->exifData());
+            targetImage->setExifData(sourceImage->exifData(), 
+                                     sourceImage->sizeExifData());
         }
         if (   Params::instance().target_ & Params::ctIptc
-            && sourceImage->iptcData().count() > 0) {
+            && sourceImage->sizeIptcData() > 0) {
             if (Params::instance().verbose_) {
                 std::cout << "Writing Iptc data from " << source 
                           << " to " << target << std::endl;
             }
-            targetImage->setIptcData(sourceImage->iptcData());
+            targetImage->setIptcData(sourceImage->iptcData(), 
+                                     sourceImage->sizeIptcData());
         }
         if (   Params::instance().target_ & Params::ctComment
             && !sourceImage->comment().empty()) {

@@ -11,7 +11,6 @@
  */
 // *****************************************************************************
 // included header files
-#include "image.hpp"
 #include "exif.hpp"
 #include <iostream>
 #include <iomanip>
@@ -27,21 +26,12 @@ try {
         return 1;
     }
 
-    Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(argv[1]);
-    if (image.get() == 0) {
-        std::string error(argv[1]);
-        error += " : Could not read file or unknown image type";
-        throw Exiv2::Error(error);
-    }
-
-    // Load existing metadata
-    int rc = image->readMetadata();
+    Exiv2::ExifData exifData;
+    int rc = exifData.read(argv[1]);
     if (rc) {
-        std::string error = Exiv2::Image::strError(rc, argv[1]);
+        std::string error = Exiv2::ExifData::strError(rc, argv[1]);
         throw Exiv2::Error(error);
     }
-
-    Exiv2::ExifData &exifData = image->exifData();
 
     /*
       Use Exiv2::CommentValue for Exif user comments. The format of the comment
@@ -66,13 +56,13 @@ try {
               << exifData["Exif.Photo.UserComment"]
               << "' back to the image\n";
 
-    rc = image->writeMetadata();
+    rc = exifData.write(argv[1]);
     if (rc) {
-        std::string error = Exiv2::Image::strError(rc, argv[1]);
+        std::string error = Exiv2::ExifData::strError(rc, argv[1]);
         throw Exiv2::Error(error);
     }
 
-    return rc;
+   return rc;
 }
 catch (Exiv2::Error& e) {
     std::cout << "Caught Exiv2 exception '" << e << "'\n";
