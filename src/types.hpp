@@ -46,7 +46,6 @@
 #include <iosfwd>
 #include <utility>
 #include <sstream>
-#include <cstdio>
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
 #endif
@@ -82,8 +81,7 @@ namespace Exiv2 {
     enum TypeId { invalidTypeId, unsignedByte, asciiString, unsignedShort, 
                   unsignedLong, unsignedRational, invalid6, undefined, 
                   signedShort, signedLong, signedRational, 
-                  string, date, time, 
-                  comment,
+                  string, date, time,
                   lastTypeId };
 
     //! Type to specify the IFD to which a metadata belongs
@@ -115,8 +113,6 @@ namespace Exiv2 {
     public:
         //! Return the name of the type
         static const char* typeName(TypeId typeId);
-        //! Return the type id for a type name
-        static TypeId typeId(const std::string& typeName);
         //! Return the size in bytes of one element of this type
         static long typeSize(TypeId typeId);
 
@@ -204,6 +200,39 @@ namespace Exiv2 {
         long size_; 
     }; // class DataBuf
 
+    /*!
+      @brief Utility class that closes a file stream pointer upon destruction.
+             Its primary use is to be a stack variable in functions that need to
+             ensure files get closed. Useful when functions return errors from
+             many locations.
+     */
+    class FileCloser {
+        // Not implemented
+        //! Copy constructor
+        FileCloser(const FileCloser&);
+        //! Assignment operator
+        FileCloser& operator=(const FileCloser&);
+    public:
+        //! @name Creators
+        //@{
+        //! Default constructor
+        FileCloser() : fp_(0) {}
+        //! Constructor, takes a file stream pointer 
+        FileCloser(FILE *fp) : fp_(fp) {}
+        //! Destructor, closes the file
+        ~FileCloser() { close(); }
+        //@}
+
+        //! @name Manipulators
+        //@{
+        //! Close the file
+        void close() { if (fp_) fclose(fp_); fp_ = 0; }
+        //@}
+
+        // DATA
+        //! The file stream pointer
+        FILE *fp_; 
+    }; // class FileCloser
 
 // *****************************************************************************
 // free functions

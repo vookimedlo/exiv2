@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # Test driver for image file i/o
 
 eraseTest()
@@ -76,7 +76,6 @@ diffCheck()
 # main
 
 LD_LIBRARY_PATH=../../src:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH
 binpath="../../src"
 datapath="../data"
 

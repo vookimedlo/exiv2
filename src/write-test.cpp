@@ -15,7 +15,6 @@
  */
 // *****************************************************************************
 // included header files
-#include "image.hpp"
 #include "exif.hpp"
 #include "makernote.hpp"
 
@@ -161,24 +160,15 @@ void testCase(const std::string& file1,
               const std::string& value)
 {
     ExifKey ek(key);
+    ExifData ed1;
 
-    //Open first image
-    Image::AutoPtr image1 = ImageFactory::open(file1);
-    if (image1.get() == 0) {
-        std::string error(file1);
-        error += " : Could not read file or unknown image type";
-        throw Exiv2::Error(error);
-    }
-
-    // Load existing metadata
     std::cerr << "---> Reading file " << file1 << "\n";
-    int rc = image1->readMetadata();
+    int rc = ed1.read(file1);
     if (rc) {
-        std::string error = Exiv2::Image::strError(rc, file1);
-        throw Exiv2::Error(error);
+        std::string error = ExifData::strError(rc, file1.c_str());
+        throw Error(error);
     }
 
-    Exiv2::ExifData &ed1 = image1->exifData();
     std::cerr << "---> Modifying Exif data\n";
     Exiv2::ExifData::iterator pos = ed1.findKey(ek);
     if (pos == ed1.end()) {
@@ -186,35 +176,27 @@ void testCase(const std::string& file1,
     }
     pos->setValue(value);
 
-    // Open second image
-    Image::AutoPtr image2 = ImageFactory::open(file2);
-    if (image2.get() == 0) {
-        std::string error(file2);
-        error += " : Could not read file or unknown image type";
-        throw Exiv2::Error(error);
-    }
-
-    image2->setExifData(image1->exifData());
-
     std::cerr << "---> Writing Exif data to file " << file2 << "\n";
-    rc = image2->writeMetadata();
+    rc = ed1.write(file2);
     if (rc) {
-        std::string error = Image::strError(rc, file2.c_str());
+        std::string error = ExifData::strError(rc, file2.c_str());
         throw Error(error);
     }
 
+    ExifData ed2;
+
     std::cerr << "---> Reading file " << file2 << "\n";
-    rc = image2->readMetadata();
+    rc = ed2.read(file2);
     if (rc) {
-        std::string error = Exiv2::Image::strError(rc, file2);
-        throw Exiv2::Error(error);
+        std::string error = ExifData::strError(rc, file2.c_str());
+        throw Error(error);
     }
 
-    Exiv2::ExifData &ed2 = image2->exifData();
     exifPrint(ed2);
 
     std::cerr << "---> Writing Exif thumbnail to file " << thumb << ".*\n";
     ed2.writeThumbnail(thumb);
+
 }
 
 // *****************************************************************************

@@ -32,7 +32,6 @@
 // *****************************************************************************
 // included header files
 #include "utils.hpp"
-#include "types.hpp"
 
 // + standard includes
 #include <string>
@@ -41,33 +40,6 @@
 
 // *****************************************************************************
 // class definitions
-
-//! Command identifiers
-enum CmdId { invalidCmdId, add, set, del };
-//! Metadata identifiers
-enum MetadataId { invalidMetadataId, iptc, exif };
-//! Structure for one parsed modification command 
-struct ModifyCmd {
-    //! C'tor
-    ModifyCmd() :
-        cmdId_(invalidCmdId), metadataId_(invalidMetadataId), 
-        typeId_(Exiv2::invalidTypeId), explicitType_(false) {}
-    CmdId cmdId_;                               //!< Command identifier
-    std::string key_;                           //!< Exiv2 key string
-    MetadataId metadataId_;                     //!< Metadata identifier 
-    Exiv2::TypeId typeId_;                      //!< Exiv2 type identifier
-    //! Flag to indicate if the type was explicitely specified (true)
-    bool explicitType_;
-    std::string value_;                         //!< Data 
-};
-//! Container for modification commands
-typedef std::vector<ModifyCmd> ModifyCmds;
-//! Structure to link command identifiers to strings
-struct CmdIdAndString {
-    CmdId cmdId_;                               //!< Commands identifier
-    std::string cmdString_;                     //!< Command string
-};
-
 /*!
   @brief Implements the command line handling for the program. 
 
@@ -131,8 +103,6 @@ public:
 
     long adjustment_;                   //!< Adjustment in seconds.
     std::string format_;                //!< Filename format (-r option arg).
-    std::string cmdFile_;               //!< Name of the modification command file
-    ModifyCmds modifyCmds_;             //!< Parsed modification commands
 
     //! Container to store filenames.
     typedef std::vector<std::string> Files;
@@ -144,7 +114,7 @@ private:
       @brief Default constructor. Note that optstring_ is initialized here.
              The c'tor is private to force instantiation through instance().
      */
-    Params() : optstring_(":hVvfa:r:p:d:e:i:m:"),
+    Params() : optstring_(":hVvfa:r:p:d:e:i:"),
                help_(false), 
                version_(false),
                verbose_(false), 

@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # Test driver for Iptc metadata
 
 printTest()
@@ -111,7 +111,6 @@ diffCheck()
 # main
 
 LD_LIBRARY_PATH=../../src:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH
 binpath="../../src"
 datapath="../data"
 diffargs="--strip-trailing-cr"

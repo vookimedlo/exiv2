@@ -36,12 +36,11 @@ EXIV2_RCSID("@(#) $Id$");
 // included header files
 #include "exif.hpp"
 #include "types.hpp"
-#include "basicio.hpp"
 #include "error.hpp"
 #include "value.hpp"
 #include "ifd.hpp"
 #include "tags.hpp"
-#include "jpgimage.hpp"
+#include "image.hpp"
 #include "makernote.hpp"
 
 // + standard includes
@@ -278,7 +277,6 @@ namespace Exiv2 {
         long size = length->toLong();
         if (len < offset + size) return 2;
         format->setDataArea(buf + offset, size);
-        format->setValue("0");
         Ifd::iterator pos = ifd1.findTag(0x0201);
         assert(pos != ifd1.end());
         pos->setDataArea(buf + offset, size);
@@ -311,38 +309,9 @@ namespace Exiv2 {
     {
     }
 
-    ExifData::ExifData(const ExifData& rhs)
-        : tiffHeader_(rhs.tiffHeader_), exifMetadata_(rhs.exifMetadata_),
-          ifd0_(ifd0Id, 0, false), 
-          exifIfd_(exifIfdId, 0, false), iopIfd_(iopIfdId, 0, false), 
-          gpsIfd_(gpsIfdId, 0, false), ifd1_(ifd1Id, 0, false), 
-          size_(0), pData_(0), compatible_(false)
-    {
-        if (rhs.makerNote_.get() != 0) makerNote_ = rhs.makerNote_->clone();
-    }
-
     ExifData::~ExifData()
     {
         delete[] pData_;
-    }
-
-    ExifData& ExifData::operator=(const ExifData& rhs)
-    {
-        if (this == &rhs) return *this;
-        tiffHeader_ = rhs.tiffHeader_;
-        exifMetadata_ = rhs.exifMetadata_;
-        makerNote_.reset();
-        if (rhs.makerNote_.get() != 0) makerNote_ = rhs.makerNote_->clone();
-        ifd0_.clear();
-        exifIfd_.clear();
-        iopIfd_.clear();
-        gpsIfd_.clear();
-        ifd1_.clear();
-        size_ = 0;
-        delete[] pData_;
-        pData_ = 0;
-        compatible_ = false;
-        return *this;
     }
 
     Exifdatum& ExifData::operator[](const std::string& key)
@@ -356,7 +325,28 @@ namespace Exiv2 {
         return *pos;
     }
 
-    int ExifData::load(const byte* buf, long len)
+    int ExifData::read(const std::string& path)
+    {
+        if (!fileExists(path, true)) return -1;
+        Image::AutoPtr image = ImageFactory::instance().open(path);
+        if (image.get() == 0) {
+            // We don't know this type of file
+            return -2;
+        }
+
+        int rc = image->readMetadata();
+        if (rc == 0) {
+            if (image->sizeExifData() > 0) {
+                rc = read(image->exifData(), image->sizeExifData());
+            }
+            else {
+                rc = 3;
+            }
+        }
+        return rc;
+    }
+
+    int ExifData::read(const byte* buf, long len)
     {
         // Copy the data buffer
         delete[] pData_;
@@ -456,6 +446,38 @@ namespace Exiv2 {
         return ret;
     } // ExifData::read
 
+    int ExifData::erase(const std::string& path) const
+    {
+        if (!fileExists(path, true)) return -1;
+        Image::AutoPtr image = ImageFactory::instance().open(path);
+        if (image.get() == 0) return -2;
+
+        // Read all metadata then erase only Exif data
+        int rc = image->readMetadata();
+        if (rc == 0) {
+            image->clearExifData();
+            rc = image->writeMetadata();
+        }
+        return rc;
+    } // ExifData::erase
+
+    int ExifData::write(const std::string& path) 
+    {
+        // Remove the Exif section from the file if there is no metadata 
+        if (count() == 0) return erase(path);
+
+        if (!fileExists(path, true)) return -1;
+        Image::AutoPtr image = ImageFactory::instance().open(path);
+        if (image.get() == 0) return -2;
+        DataBuf buf(copy());
+        // Read all metadata to preserve non-Exif data
+        int rc = image->readMetadata();
+        if (rc == 0) {
+            image->setExifData(buf.pData_, buf.size_);
+            rc = image->writeMetadata();
+        }
+        return rc;
+    } // ExifData::write
 
     DataBuf ExifData::copy()
     {
@@ -607,6 +629,15 @@ namespace Exiv2 {
         assert(size == buf.size_);
         return buf;
     } // ExifData::copyFromMetadata
+
+    int ExifData::writeExifData(const std::string& path)
+    {
+        DataBuf buf(copy());
+        ExvImage exvImage(path, true);
+        if (!exvImage.good()) return -1;
+        exvImage.setExifData(buf.pData_, buf.size_);
+        return exvImage.writeMetadata();
+    } // ExifData::writeExifData
 
     void ExifData::add(Entries::const_iterator begin, 
                        Entries::const_iterator end,
@@ -785,11 +816,11 @@ namespace Exiv2 {
         if (thumbnail.get() == 0) return 8;
 
         std::string name = path + thumbnail->extension();
-        FileIo file(name);
-        if (file.open("wb") != 0) return -1;
+        FileCloser file(fopen(name.c_str(), "wb"));
+        if (!file.fp_) return -1;
 
         DataBuf buf(thumbnail->copy(*this));
-        if (file.write(buf.pData_, buf.size_) != buf.size_) {
+        if (fwrite(buf.pData_, 1, buf.size_, file.fp_) != (size_t)buf.size_) {
             return 4;
         }
         return 0;
@@ -1136,14 +1167,14 @@ namespace {
 
     Exiv2::DataBuf readFile(const std::string& path)
     {
-        Exiv2::FileIo file(path);
-        if (file.open("rb") != 0) 
+        Exiv2::FileCloser file(fopen(path.c_str(), "rb"));
+        if (!file.fp_) 
             throw Exiv2::Error("Couldn't open input file");
         struct stat st;
         if (0 != stat(path.c_str(), &st))
             throw Exiv2::Error("Couldn't stat input file");
         Exiv2::DataBuf buf(st.st_size);
-        long len = file.read(buf.pData_, buf.size_);
+        long len = (long)fread(buf.pData_, 1, buf.size_, file.fp_);
         if (len != buf.size_) 
             throw Exiv2::Error("Couldn't read input file");
         return buf; 
