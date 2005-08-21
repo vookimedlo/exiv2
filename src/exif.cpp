@@ -114,12 +114,6 @@ namespace Exiv2 {
         if (rhs.value_.get() != 0) value_ = rhs.value_->clone(); // deep copy
     }
 
-    const Value& Exifdatum::value() const 
-    {
-        if (value_.get() == 0) throw Error(8);        
-        return *value_; 
-    }
-
     Exifdatum& Exifdatum::operator=(const Exifdatum& rhs)
     {
         if (this == &rhs) return *this;
@@ -196,11 +190,6 @@ namespace Exiv2 {
             value_ = Value::create(type);
         }
         value_->read(value);
-    }
-
-    TiffThumbnail& TiffThumbnail::operator=(const TiffThumbnail& /*rhs*/)
-    {
-        return *this; 
     }
 
     int TiffThumbnail::setDataArea(ExifData& exifData, Ifd* pIfd1,
@@ -285,11 +274,6 @@ namespace Exiv2 {
         len += ifd1.copy(buf.pData_ + len, exifData.byteOrder(), len);
         assert(len == size);
         return buf;
-    }
-
-    JpegThumbnail& JpegThumbnail::operator=(const JpegThumbnail& /*rhs*/) 
-    {
-        return *this; 
     }
 
     int JpegThumbnail::setDataArea(ExifData& exifData, Ifd* pIfd1,
@@ -477,7 +461,10 @@ namespace Exiv2 {
         delete pIfd0_;
         pIfd0_ = new Ifd(ifd0Id, 0, false); 
         assert(pIfd0_ != 0);
-        rc = pIfd0_->read(pData_, size_, pTiffHeader_->offset(), byteOrder());
+        rc = pIfd0_->read(pData_ + pTiffHeader_->offset(), 
+                          size_ - pTiffHeader_->offset(), 
+                          byteOrder(), 
+                          pTiffHeader_->offset());
         if (rc) return rc;
 
         delete pExifIfd_;
@@ -505,14 +492,14 @@ namespace Exiv2 {
         }
         // Read the MakerNote
         if (pMakerNote_) {
-            rc = pMakerNote_->read(pData_, size_, 
-                                   pExifIfd_->offset() + pos->offset(),
-                                   byteOrder());
+            rc = pMakerNote_->read(pos->data(), 
+                                   pos->size(),
+                                   byteOrder(),
+                                   pExifIfd_->offset() + pos->offset());
             if (rc) {
-#ifndef SUPPRESS_WARNINGS
+                // Todo: How to handle debug output like this
                 std::cerr << "Warning: Failed to read Makernote, rc = "
                           << rc << "\n";
-#endif
                 delete pMakerNote_;
                 pMakerNote_ = 0;
             }
@@ -542,7 +529,10 @@ namespace Exiv2 {
         assert(pIfd1_ != 0);
         // Read IFD1
         if (pIfd0_->next()) {
-            rc = pIfd1_->read(pData_, size_, pIfd0_->next(), byteOrder());
+            rc = pIfd1_->read(pData_ + pIfd0_->next(), 
+                              size_ - pIfd0_->next(), 
+                              byteOrder(), 
+                              pIfd0_->next());
             if (rc) return rc;
         }
         // Find and delete ExifIFD sub-IFD of IFD1
@@ -898,15 +888,6 @@ namespace Exiv2 {
         }
         return rc;
     } // ExifData::stdThumbPosition
-
-    bool ExifData::hasMakerNote() const
-    {
-        const_iterator e = end();
-        for (const_iterator md = begin(); md != e; ++md) {
-            if (ExifTags::isMakerIfd(md->ifdId())) return true;
-        }
-        return false;
-    } // ExifData::hasMakerNote
 
     ByteOrder ExifData::byteOrder() const
     { 

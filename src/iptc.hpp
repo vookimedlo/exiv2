@@ -226,7 +226,8 @@ namespace Exiv2 {
           @return A constant reference to the value.
           @throw Error If the value is not set.
          */
-        const Value& value() const;
+        const Value& value() const
+            { if (value_.get() != 0) return *value_; throw Error(8); }
         //@}
 
     private:

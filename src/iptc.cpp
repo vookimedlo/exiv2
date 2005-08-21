@@ -28,6 +28,9 @@
 #include "rcsid.hpp"
 EXIV2_RCSID("@(#) $Id$");
 
+// Define DEBUG_MAKERNOTE to output debug information to std::cerr
+#undef DEBUG_MAKERNOTE
+
 // *****************************************************************************
 // included header files
 #include "iptc.hpp"
@@ -61,12 +64,6 @@ namespace Exiv2 {
 
     Iptcdatum::~Iptcdatum()
     {
-    }
-
-    const Value& Iptcdatum::value() const
-    {
-        if (value_.get() == 0) throw Error(8);
-        return *value_; 
     }
 
     Iptcdatum& Iptcdatum::operator=(const Iptcdatum& rhs)

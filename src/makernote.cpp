@@ -66,50 +66,50 @@ namespace Exiv2 {
 
     IfdMakerNote::IfdMakerNote(IfdId ifdId, bool alloc, bool hasNext)
         : MakerNote(alloc), 
-          absShift_(true), shift_(0), start_(0), ifd_(ifdId, 0, alloc, hasNext)
+          absOffset_(true), adjOffset_(0), ifd_(ifdId, 0, alloc, hasNext)
     {
     }
 
     IfdMakerNote::IfdMakerNote(const IfdMakerNote& rhs)
-        : MakerNote(rhs), absShift_(rhs.absShift_), shift_(rhs.shift_),
-          start_(rhs.start_), header_(rhs.header_.size_), ifd_(rhs.ifd_)
+        : MakerNote(rhs), absOffset_(rhs.absOffset_), adjOffset_(rhs.adjOffset_),
+          header_(rhs.header_.size_), ifd_(rhs.ifd_)
     {
         memcpy(header_.pData_, rhs.header_.pData_, header_.size_);
     }
 
     int IfdMakerNote::read(const byte* buf,
                            long len, 
-                           long start, 
-                           ByteOrder byteOrder,
-                           long shift)
+                           ByteOrder byteOrder, 
+                           long offset)
     {
         // Remember the offset
-        offset_ = start - shift;
+        offset_ = offset;
         // Set byte order if none is set yet
         if (byteOrder_ == invalidByteOrder) byteOrder_ = byteOrder;
         // Read and check the header (and set offset adjustment)
-        int rc = readHeader(buf + start, len - start, byteOrder);
+        int rc = readHeader(buf, len, byteOrder);
         if (rc == 0) {
             rc = checkHeader();
         }
-        // Adjust shift
-        long newShift = absShift_ ? shift + shift_ : start + shift_;
+        // Adjust the offset
+        offset = absOffset_ ? offset + adjOffset_ : adjOffset_;
         // Read the makernote IFD
         if (rc == 0) {
-            rc = ifd_.read(buf, len, start + start_, byteOrder_, newShift);
+            rc = ifd_.read(buf + headerSize(), 
+                           len - headerSize(),
+                           byteOrder_,
+                           offset);
         }
         if (rc == 0) {
             // IfdMakerNote currently does not support multiple IFDs
             if (ifd_.next() != 0) {
-#ifndef SUPPRESS_WARNINGS
                 std::cerr << "Warning: Makernote IFD has a next pointer != 0 ("
                           << ifd_.next()
                           << "). Ignored.\n";
-#endif
             }
         }
 #ifdef DEBUG_MAKERNOTE
-        hexdump(std::cerr, buf + start, len - start);
+        hexdump(std::cerr, buf, len, offset);
         if (rc == 0) ifd_.print(std::cerr);
 #endif
 
@@ -123,7 +123,7 @@ namespace Exiv2 {
         // Set byte order if none is set yet
         if (byteOrder_ == invalidByteOrder) byteOrder_ = byteOrder;
         // Adjust the offset
-        offset = absShift_ ? offset + start_ - shift_ : start_ - shift_;
+        offset = absOffset_ ? offset + adjOffset_ : adjOffset_;
 
         long len = 0;
         len += copyHeader(buf);
@@ -142,7 +142,7 @@ namespace Exiv2 {
 
     void IfdMakerNote::updateBase(byte* pNewBase)
     { 
-        if (absShift_) {
+        if (absOffset_) {
             ifd_.updateBase(pNewBase);
         }
     }
@@ -184,41 +184,8 @@ namespace Exiv2 {
         return AutoPtr(clone_());
     }
 
-    int MakerNoteFactory::Init::count = 0;
-
-    MakerNoteFactory::Init::Init()
-    {
-        ++count;
-    }
-
-    MakerNoteFactory::Init::~Init()
-    {
-        if (--count == 0) {
-            Exiv2::MakerNoteFactory::cleanup();
-        }
-    }
-
     MakerNoteFactory::Registry* MakerNoteFactory::pRegistry_ = 0;
     MakerNoteFactory::IfdIdRegistry* MakerNoteFactory::pIfdIdRegistry_ = 0;
-
-    void MakerNoteFactory::cleanup()
-    {
-        if (pRegistry_ != 0) {
-            Registry::iterator e = pRegistry_->end();
-            for (Registry::iterator i = pRegistry_->begin(); i != e; ++i) {
-                delete i->second;
-            }
-            delete pRegistry_;
-        }
-
-        if (pIfdIdRegistry_ != 0) {
-            IfdIdRegistry::iterator e = pIfdIdRegistry_->end();
-            for (IfdIdRegistry::iterator i = pIfdIdRegistry_->begin(); i != e; ++i) {
-                delete i->second;
-            }
-            delete pIfdIdRegistry_;
-        }
-    }
 
     void MakerNoteFactory::init()
     {
@@ -236,11 +203,6 @@ namespace Exiv2 {
         init();
         MakerNote* pMakerNote = makerNote.release();
         assert(pMakerNote);
-        IfdIdRegistry::iterator pos = pIfdIdRegistry_->find(ifdId);
-        if (pos != pIfdIdRegistry_->end()) {
-            delete pos->second;
-            pos->second = 0;
-        }
         (*pIfdIdRegistry_)[ifdId] = pMakerNote;
     } // MakerNoteFactory::registerMakerNote
 

@@ -117,24 +117,15 @@ namespace Exiv2 {
         //! @name Manipulators
         //@{
         /*!
-          @brief Read the makernote, including the makernote header, from the 
-                 Exif data buffer.
-
-          @param buf Pointer to the Exif data buffer that contains the 
-                     MakerNote to decode. The buffer should contain all Exif 
-                     data starting from the TIFF header.
-          @param len Number of bytes in the Exif data buffer
-          @param start MakerNote starts at buf + start.
-          @param byteOrder Applicable byte order (little or big endian).
-          @param shift IFD offsets are relative to buf + shift.
-
-          @return 0 if successful.
-        */
+          @brief Read the makernote, including the makernote header, from
+                 character buffer buf of length len at position offset (from the
+                 start of the TIFF header) and encoded in byte order byteOrder.
+                 Return 0 if successful.
+         */
         virtual int read(const byte* buf, 
                          long len, 
-                         long start,
                          ByteOrder byteOrder,
-                         long shift =0) =0;
+                         long offset) =0;
         /*!
           @brief Copy (write) the makerNote to the character buffer buf at 
                  position offset (from the start of the TIFF header), encoded
@@ -265,14 +256,13 @@ namespace Exiv2 {
         //@{
         virtual int read(const byte* buf, 
                          long len, 
-                         long start, 
-                         ByteOrder byteOrder,
-                         long shift);
+                         ByteOrder byteOrder, 
+                         long offset);
         /*!
           @brief Read the makernote header from the makernote databuffer.  This
-                 method must set the offset to the start of the IFD (start_), if 
-                 needed (assuming that the required information is in the header).
-                 Return 0 if successful. 
+                 method must set the offset adjustment (adjOffset_), if needed
+                 (assuming that the required information is in the header).
+                 Return 0 if successful.          
           @note  The default implementation does nothing, assuming there is no
                  header
          */
@@ -319,22 +309,20 @@ namespace Exiv2 {
     protected:
         // DATA
         /*!
-          @brief True:  IFD offsets are relative to the start of the TIFF
-                        header (i.e., the start of the Exif data section)
-                        + shift_
-                 False: IFD offsets are relative to the start of the 
-                        makernote + shift_
+          @brief True:  Adjustment of the IFD offsets is to be added to the
+                        offset from the start of the TIFF header (i.e., the
+                        start of the Exif data section),
+                 False: Adjustment of the IFD offsets is a suitable absolute 
+                        value. Ignore the offset from the start of the TIFF 
+                        header.
          */
-        bool absShift_;
+        bool absOffset_;
         /*!
-          @brief Adjustment for IFD offsets, see absShift_.
+          @brief Adjustment of the IFD offsets relative to the start of the 
+                 TIFF header or to the start of the makernote, depending on 
+                 the setting of absOffset_.
          */
-        long shift_;
-        /*!
-          @brief Start of the makernote IFD relative to the start of the
-                 makernote.
-         */
-        long start_;
+        long adjOffset_;
         //! Data buffer for the makernote header
         DataBuf header_;
         //! The makernote IFD
@@ -356,8 +344,6 @@ namespace Exiv2 {
     */
     class MakerNoteFactory {
     public:
-        //! Destructor.
-        static void cleanup();
         /*!
           @brief Register a %MakerNote create function for a camera make and
                  model.
@@ -456,25 +442,6 @@ namespace Exiv2 {
          */
         static int match(const std::string& regEntry, const std::string& key);
 
-        /*!
-          @brief Class Init is used to execute initialisation and termination 
-                 code exactly once, at the begin and end of the program.
-
-          See Bjarne Stroustrup, 'The C++ Programming Language 3rd
-          Edition', section 21.5.2 for details about this pattern.
-        */
-        class Init {
-            static int count;           //!< Counts calls to constructor
-        public:
-            //! @name Creators
-            //@{                            
-            //! Perform one-time initialisations.
-            Init();
-            //! Perform one-time cleanup operations.
-            ~Init();
-            //@}
-        };
-
     private:
         //! @name Creators
         //@{                
@@ -503,17 +470,5 @@ namespace Exiv2 {
     }; // class MakerNoteFactory
    
 }                                       // namespace Exiv2
-
-namespace {
-    /*!
-      Each translation unit that includes makernote.hpp declares its own
-      Init object. The destructor ensures that the factory is properly
-      freed exactly once.
-
-      See Bjarne Stroustrup, 'The C++ Programming Language 3rd
-      Edition', section 21.5.2 for details about this pattern.
-    */
-    Exiv2::MakerNoteFactory::Init makerNoteFactoryInit;
-}
 
 #endif                                  // #ifndef MAKERNOTE_HPP_

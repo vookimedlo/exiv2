@@ -45,19 +45,22 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 # **********************************************************************
 # C++ Compiler and precompiler
 CXX = @CXX@
-GXX = @GXX@
 
 # Common compiler flags (warnings, symbols [-ggdb], optimization [-O2], etc)
-CXXFLAGS = @CXXFLAGS@
-ifeq ($(GXX),yes)
-	CXXFLAGS += -Wall
+ifeq ($(findstring g++,$(CXX)),g++)
+	CXXFLAGS := -Wall -O2
+else
+	CXXFLAGS := @CXXFLAGS@
 endif
 
 # Command to run only the preprocessor
-CXXCPP = @CXXCPP@
+CXXCPP = $(CXX) -E -dD
 
 # Preprocessor flags
 CPPFLAGS = @CPPFLAGS@
+
+# Command to run the compiler or preprocessor to produce dependencies
+CXXDEP = $(CXX) -MM
 
 # Linker flags
 LDFLAGS = @LDFLAGS@ -lm
@@ -68,29 +71,10 @@ EXEEXT := @EXEEXT@
 # **********************************************************************
 # C Compiler
 CC = @CC@
-GCC = @GCC@
-
-CFLAGS = @CFLAGS@
-ifeq ($(GCC),yes)
-	CFLAGS += -Wall
-endif
-
-# **********************************************************************
-# Advanced auto-dependency generation
-# http://make.paulandlesley.org/autodep.html
-
-# Compiler flags to generate dependency files at the same time as object
-# files (for gcc)
-ifeq ($(GXX),yes)
-	CXXFLAGS += -MMD
-	CFLAGS += -MMD
-	MAKEDEPEND =
+ifeq ($(findstring gcc,$(CC)),gcc)
+	CFLAGS := -Wall -O2
 else
-# Command to run the compiler or preprocessor to produce dependencies.
-# If you're not using gcc, you may need to change this to something 
-# suitable for your compiler or simply unset the variable. See the link
-# above for suggestions
-	MAKEDEPEND = $(CXX) -MM $(CPPFLAGS) -o $*.d $<
+	CFLAGS := @CFLAGS@
 endif
 
 # **********************************************************************
