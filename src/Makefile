@@ -110,12 +110,9 @@ SRC = $(CCSRC)
 HDR = $(CCHDR)
 OBJ = $(CCOBJ)
 LOBJ = $(CCLOBJ)
-
-DEPDIR = .deps
-DEP = $(CCSRC:%.cpp=$(DEPDIR)/%.d) $(BINSRC:%.cpp=$(DEPDIR)/%.d) \
-      $(EXIV2MAIN:%.cpp=$(DEPDIR)/%.d) $(EXIV2SRC:%.cpp=$(DEPDIR)/%.d) \
-      $(EXIVCSRC:%.c=$(DEPDIR)/%.d) $(MCMAIN:%.cpp=$(DEPDIR)/%.d) \
-      $(MCSRC:%.cpp=$(DEPDIR)/%.d) $(DEPDIR)/path-test.d
+DEP = $(CCSRC:%.cpp=.%.d) $(BINSRC:%.cpp=.%.d) \
+      $(EXIV2MAIN:%.cpp=.%.d) $(EXIV2SRC:%.cpp=.%.d) $(EXIVCSRC:%.c=.%.d) \
+      $(MCMAIN:%.cpp=.%.d) $(MCSRC:%.cpp=.%.d)
 
 BINOBJ = $(BINSRC:.cpp=.o)
 BINARY = $(BINSRC:.cpp=)
@@ -130,38 +127,44 @@ MCOBJ = $(MCMAIN:.cpp=.o) $(MCSRC:.cpp=.o)
 MCBIN = $(MCMAIN:.cpp=)
 MCEXE = $(MCMAIN:.cpp=$(EXEEXT))
 
-# Dependency files post-process commands 
-POSTDEPEND = if test ! -d $(DEPDIR); then mkdir $(DEPDIR); fi; \
-	     if test -e $*.d; then cp $*.d $(DEPDIR)/$*.d; \
-	     sed -e 's/^\#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-                 -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $(DEPDIR)/$*.d; \
-             $(RM) $*.d; fi
-
-# Compilation shortcuts 
-COMPILE.cc = $(CXX) $(CXXFLAGS) $(CXXDEFS) $(CXXINCS) -c
-COMPILE.c = $(CC) $(CFLAGS) $(DEFS) $(INCS) -c
-LINK.cc = $(CXX) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS) -rpath $(libdir) 
+# ******************************************************************************
+# Include `.*.d' files, but only if we need them, 
+# i.e., if no target was given...
+ifeq ($(strip $(MAKECMDGOALS)),)
+-include $(DEP)
+else
+# ...or the target is _not_ one in the list of targets below.
+NOINCLUDE = uninstall uninstall-lib check doc ctags mostlyclean clean  \
+            install-header uninstall-header distclean maintainer-clean exv_conf.h 
+ifneq ($(MAKECMDGOALS), $(filter $(MAKECMDGOALS), $(NOINCLUDE)))
+-include $(DEP)
+endif
+endif
 
 # ******************************************************************************
 # Rules
 $(OBJ): %.o: %.cpp
-	@$(LIBTOOL) --mode=compile $(COMPILE.cc) -o $@ $<
-	@$(MAKEDEPEND)
-	@$(POSTDEPEND)
+	@$(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) $(CXXDEFS) $(CXXINCS) -c $<
 
-$(sort $(BINOBJ) $(EXIV2OBJ) $(MCOBJ) path-test.o): %.o: %.cpp
-	$(COMPILE.cc) -o $@ $<
-	@$(MAKEDEPEND)
-	@$(POSTDEPEND)
+$(sort $(BINOBJ) $(EXIV2OBJ) $(MCOBJ)): %.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(CXXDEFS) $(CXXINCS) -c $<
 
 %.o: %.c
-	$(COMPILE.c) -o $@ $<
-	@$(MAKEDEPEND)
-	@$(POSTDEPEND)
+	$(CC) $(CFLAGS) $(DEFS) $(INCS) -c $<
 
 %.ii: %.cpp
 	set -e; \
-	$(CXXCPP) $(CPPFLAGS) $(CXXDEFS) $(CXXINCS) $< | sed '/^[ 	]*$$/d' > $@
+	$(CXXCPP) $(CPPFLAGS) $(CXXDEFS) $(CXXINCS) $< \
+	| sed '/^[ 	]*$$/d' > $@
+
+# generate a makefile with the prerequisites for each source file
+# (see `info make' for details)
+.%.d: %.cpp
+	@echo generating $@
+	@set -e; \
+	$(CXXDEP) $(CPPFLAGS) $(CXXDEFS) $(CXXINCS) $< \
+	| sed 's/\($*\)\.o[ :]*/\1.o $@ : /' > $@; \
+	[ -s $@ ] || $(RM) $@
 
 # ******************************************************************************
 # Targets
@@ -170,10 +173,8 @@ $(sort $(BINOBJ) $(EXIV2OBJ) $(MCOBJ) path-test.o): %.o: %.cpp
         install install-header install-lib                             \
         uninstall uninstall-header uninstall-lib
 
-# Include targets from dependency files
--include $(DEP)
-
-actions.cpp basicio.cpp exif.cpp exiv2.cpp futils.cpp image.cpp jpgimage.cpp utils.cpp: exv_conf.h
+types.hpp: exv_conf.h 
+actions.cpp exiv2.cpp image.cpp utils.cpp: exv_conf.h 
 
 exv_conf.h: $(top_srcdir)/config/config.h
 	sed 's/#define \([A-Z]\)/#define EXV_\1/; s/#undef \([A-Z]\)/#undef EXV_\1/' < $< > $@
@@ -191,13 +192,13 @@ path-test: path-test.o utils.o
 	$(CXX) $(CXXFLAGS) path-test.o utils.o -o $@
 
 $(BINARY): %: %.o lib
-	@$(LIBTOOL) --mode=link $(LINK.cc) -o $@ $@.o 
+	@$(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(LDLIBS) $@.o $(LDFLAGS) -o $@ -rpath $(libdir)
 
 $(EXIV2BIN): lib $(EXIV2OBJ) $(EXIV2COBJ)
-	@$(LIBTOOL) --mode=link $(LINK.cc) -o $@ $(EXIV2OBJ) $(EXIV2COBJ)
+	@$(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(EXIV2OBJ) $(EXIV2COBJ) $(LDLIBS) $(LDFLAGS) -o $@ -rpath $(libdir)
 
 $(MCBIN): lib $(MCOBJ)
-	@$(LIBTOOL) --mode=link $(LINK.cc) -o $@ $(MCOBJ) 
+	@$(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(MCOBJ) $(LDLIBS) $(LDFLAGS) -o $@ -rpath $(libdir)
 
 install-header:
 	$(INSTALL_DIRS) $(incdir)
@@ -244,7 +245,6 @@ mostlyclean:
 	$(RM) $(CCSRC:.cpp=.ii)
 	$(RM) lib
 	$(RM) path-test.o
-	$(RM) $(CCSRC:%.cpp=.libs/%.d)
 	@$(LIBTOOL) --mode=clean $(RM) $(LOBJ) $(sort $(BINOBJ) $(EXIV2OBJ) $(EXIV2COBJ) $(MCOBJ))
 
 clean: mostlyclean
@@ -256,11 +256,10 @@ clean: mostlyclean
 # files created by configuring the program.
 distclean: clean
 	$(RM) exv_conf.h
-	$(RM) $(DEP)
-	-rmdir $(DEPDIR)
 	$(RM) tags TAGS
 	$(RM) *~ *.bak *#
 
 # This command is intended for maintainers to use; it deletes files
 # that may need special tools to rebuild.
 maintainer-clean: uninstall distclean
+	$(RM) $(DEP)

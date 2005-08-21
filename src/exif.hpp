@@ -283,7 +283,8 @@ namespace Exiv2 {
           @return A constant reference to the value.
           @throw Error if the value is not set.
          */
-        const Value& value() const; 
+        const Value& value() const 
+            { if (value_.get() != 0) return *value_; throw Error(8); }
         //! Return the size of the data area.
         long sizeDataArea() const 
             { return value_.get() == 0 ? 0 : value_->sizeDataArea(); }
@@ -404,7 +405,7 @@ namespace Exiv2 {
         //! @name Manipulators
         //@{
         //! Assignment operator.
-        TiffThumbnail& operator=(const TiffThumbnail& rhs);
+        TiffThumbnail& operator=(const TiffThumbnail& rhs) { return *this; }
         //@}
 
         //! @name Accessors
@@ -429,7 +430,7 @@ namespace Exiv2 {
         //! @name Manipulators
         //@{
         //! Assignment operator.
-        JpegThumbnail& operator=(const JpegThumbnail& rhs);
+        JpegThumbnail& operator=(const JpegThumbnail& rhs) { return *this; }
         //@}
 
         //! @name Accessors
@@ -717,10 +718,6 @@ namespace Exiv2 {
           @brief Returns the byte order. Default is little endian.
          */
         ByteOrder byteOrder() const;
-        /*!
-          @brief Returns true if at least one makernote tag exists, else false.
-         */
-        bool hasMakerNote() const;
         /*!
           @brief Write the thumbnail image to a file. A filename extension
                  is appended to \em path according to the image type of the

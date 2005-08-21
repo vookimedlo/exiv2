@@ -110,11 +110,6 @@ namespace Exiv2 {
         return value;
     } // Value::create
 
-    int Value::setDataArea(const byte* /*buf*/, long /*len*/) 
-    {
-        return -1; 
-    }
-
     std::string Value::toString() const
     {
         std::ostringstream os;

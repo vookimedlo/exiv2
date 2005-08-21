@@ -9,7 +9,6 @@ AC_CONFIG_AUX_DIR([./config])
 
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_CXXCPP
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
@@ -41,9 +40,6 @@ AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([memset strchr strerror strtol])
 AC_CHECK_FUNCS([timegm], HAVE_TIMEGM=1)
 AC_SUBST(HAVE_TIMEGM,$HAVE_TIMEGM)
-
-AC_SUBST(GXX,$GXX)
-AC_SUBST(GCC,$GCC)
 
 AC_CONFIG_FILES([./config/config.mk])
 AC_OUTPUT

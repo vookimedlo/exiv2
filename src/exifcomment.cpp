@@ -14,6 +14,8 @@
 #include "image.hpp"
 #include "exif.hpp"
 #include <iostream>
+#include <iomanip>
+#include <cstring>
 #include <cassert>
 
 // *****************************************************************************

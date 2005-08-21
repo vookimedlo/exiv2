@@ -111,9 +111,8 @@ namespace Exiv2 {
         //@{
         int read(const byte* buf,
                  long len, 
-                 long start, 
-                 ByteOrder byteOrder,
-                 long shift);
+                 ByteOrder byteOrder, 
+                 long offset);
         long copy(byte* buf, ByteOrder byteOrder, long offset);
         void add(const Entry& entry);
         Entries::iterator begin() { return entries_.begin(); }
