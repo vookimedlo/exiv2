@@ -23,7 +23,6 @@
   Version:   $Rev$
   Author(s): Andreas Huggel (ahu) <ahuggel@gmx.net>
   History:   08-Dec-03, ahu: created
-             30-Apr-06, Roger Larsson: Print filename if processing multiple files
  */
 // *****************************************************************************
 #include "rcsid.hpp"
@@ -122,7 +121,7 @@ namespace {
       @brief Rename a file according to a timestamp value.
 
       @param path The original file path. Contains the new path on exit.
-      @param tm   Pointer to a buffer with the broken-down time to rename
+      @param tm   Pointer to a buffer with the broken-down time to rename 
                   the file to.
       @return 0 if successful, -1 if the file was skipped, 1 on error.
     */
@@ -475,11 +474,7 @@ namespace Action {
 
     void Print::printLabel(const std::string& label) const
     {
-        std::cout << std::setfill(' ') << std::left;
-        if (Params::instance().files_.size() > 1) {
-            std::cout << std::setw(20) << path_ << " ";
-        }
-        std::cout << std::setw(align_)
+        std::cout << std::setw(align_) << std::setfill(' ') << std::left
                   << label << ": ";
     }
 
@@ -518,13 +513,8 @@ namespace Action {
             return -3;
         }
         Exiv2::ExifData::const_iterator md;
-        bool manyFiles = Params::instance().files_.size() > 1;
         for (md = exifData.begin(); md != exifData.end(); ++md) {
-            std::cout << std::setfill(' ') << std::left;
-            if (manyFiles) {
-                std::cout << std::setw(20) << path_ << " ";
-            }
-            std::cout << std::setw(44)
+            std::cout << std::setw(44) << std::setfill(' ') << std::left
                       << md->key() << " "
                       << std::setw(9) << std::setfill(' ') << std::left
                       << md->typeName() << " "
@@ -556,12 +546,7 @@ namespace Action {
         }
         Exiv2::ExifData::const_iterator end = exifData.end();
         Exiv2::ExifData::const_iterator md;
-        bool manyFiles = Params::instance().files_.size() > 1;
         for (md = exifData.begin(); md != end; ++md) {
-            if (manyFiles) {
-                std::cout << std::setfill(' ') << std::left
-                          << std::setw(20) << path_ << " ";
-            }
             std::cout << "0x" << std::setw(4) << std::setfill('0') << std::right
                       << std::hex << md->tag() << " "
                       << std::setw(9) << std::setfill(' ') << std::left
@@ -598,13 +583,8 @@ namespace Action {
         }
         Exiv2::IptcData::const_iterator end = iptcData.end();
         Exiv2::IptcData::const_iterator md;
-        bool manyFiles = Params::instance().files_.size() > 1;
         for (md = iptcData.begin(); md != end; ++md) {
-            std::cout << std::setfill(' ') << std::left;
-            if (manyFiles) {
-                std::cout << std::setw(20) << path_ << " ";
-            }
-            std::cout << std::setw(44)
+            std::cout << std::setw(44) << std::setfill(' ') << std::left
                       << md->key() << " "
                       << std::setw(9) << std::setfill(' ') << std::left
                       << md->typeName() << " "
@@ -635,13 +615,8 @@ namespace Action {
             return -3;
         }
         Exiv2::ExifData::const_iterator md;
-        bool manyFiles = Params::instance().files_.size() > 1;
         for (md = exifData.begin(); md != exifData.end(); ++md) {
-            std::cout << std::setfill(' ') << std::left;
-            if (manyFiles) {
-                std::cout << std::setw(20) << path_ << " ";
-            }
-            std::cout << std::setw(4)
+            std::cout << std::setw(4) << std::setfill(' ') << std::left
                       << md->ifdName() << " "
                       << "0x" << std::setw(4) << std::setfill('0') << std::right
                       << std::hex << md->tag() << " "
@@ -744,8 +719,8 @@ namespace Action {
             rc = renameFile(newPath, &tm);
             if (rc == -1) return 0; // skip
         }
-        if (   0 == rc
-            && (   Params::instance().preserve_
+        if (   0 == rc 
+            && (   Params::instance().preserve_ 
                 || Params::instance().timestamp_
                 || Params::instance().timestampOnly_)) {
             ts.touch(newPath);
@@ -1032,7 +1007,6 @@ namespace Action {
     }
 
     int Modify::run(const std::string& path)
-    {
     try {
         if (!Exiv2::fileExists(path, true)) {
             std::cerr << path
@@ -1049,9 +1023,9 @@ namespace Action {
 
         if (!Params::instance().jpegComment_.empty()) {
             if (Params::instance().verbose_) {
-                std::cout << "Setting Jpeg comment '"
+                std::cout << "Setting Jpeg comment '" 
                           << Params::instance().jpegComment_
-                          << "'"
+                          << "'" 
                           << std::endl;
             }
             image_->setComment(Params::instance().jpegComment_);
@@ -1091,7 +1065,6 @@ namespace Action {
         std::cerr << "Exiv2 exception in modify action for file " << path
                   << ":\n" << e << "\n";
         return 1;
-    }
     } // Modify::run
 
     void Modify::addMetadatum(const ModifyCmd& modifyCmd)
@@ -1502,7 +1475,7 @@ namespace {
                       << path << "\n";
             return 1;
         }
-        newPath =   Util::dirname(path) + EXV_SEPERATOR_STR
+        newPath =   Util::dirname(path) + EXV_SEPERATOR_STR 
                   + basename + Util::suffix(path);
         if (   Util::dirname(newPath)  == Util::dirname(path)
             && Util::basename(newPath) == Util::basename(path)) {

@@ -14,7 +14,7 @@
 
   %Exiv2 comprises of a C++ library and a command line utility to access image
   metadata. %Exiv2 is free software. The homepage of %Exiv2 is at
-  <A HREF="http://www.exiv2.org/">http://www.exiv2.org/</A>.
+  <A HREF="http://home.arcor.de/ahuggel/exiv2">http://home.arcor.de/ahuggel/exiv2</A>.
 
   The %Exiv2 library provides
   - full read and write access to the Exif and Iptc metadata of an image through
@@ -27,10 +27,14 @@
       <br>&nbsp;&nbsp;1) the %MakerNote is not re-located if possible at all, and
       <br>&nbsp;&nbsp;2) %MakerNote %Ifd offsets are re-calculated if the
                          %MakerNote needs to be moved (for known %Ifd %MakerNotes)
+    - new camera make/model specific %MakerNotes can be added to the library with
+      minimum effort in OO-fashion (by subclassing %MakerNote or %IfdMakerNote)
   - extract and delete methods for Exif thumbnails (both, Jpeg and Tiff thumbnails)
   - set methods for Exif thumbnails (Jpeg only, Tiff thumbnails can be set from
     individual tags)
   - complete API documentation (by Doxygen)
+  - generic lower-level classes to access %Ifd (%Image File Directory) data
+    structures
 
   @section getting-started Getting started
 
@@ -49,15 +53,13 @@
   - <A HREF="tags-sony.html">Sony MakerNote tags</A>
   - <A HREF="tags-iptc.html">Iptc datasets</A>
 
-  @section formats File Formats
+  @section formats Raw File Formats
 
-  - Jpeg
   - <A HREF="crw-mapping.html">Canon CRW</A>
-  - TIFF and related RAW formats (Canon CR2, Nikon NEF, Pentax PEF, Sony SR2), read-only
 
   @section supp Support
 
-  <p>Please write to the 
+  <p>There is now a
   <a title="Exiv2 forum" href="http://uk.groups.yahoo.com/group/exiv2">Yahoo! group for Exiv2 help and discussions</a>.</p>
   <p><a title="Join the Exiv2 forum" href="http://uk.groups.yahoo.com/group/exiv2/join">Join the group</a> to post and receive messages or use <em><a title="Post to the Exiv2 forum" href="http://uk.groups.yahoo.com/group/exiv2/post">exiv2user/password</a></em> to post anonymously. Bug reports can be submitted directly to the
 <a title="Issue tracker" href="http://dev.robotbattle.com/bugs/main_page.php"
@@ -104,7 +106,7 @@ bug tracking system</a>.</p>
   details.</P>
 
   <P>You should have received a copy of the GNU General Public License along
-  with this program; if not, write to the Free Software Foundation, Inc.,
+  with this program; if not, write to the Free Software Foundation, Inc., 
   51 Franklin Street, 5th Floor, Boston, MA 02110-1301 USA.
 */
 /*!
