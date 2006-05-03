@@ -43,7 +43,6 @@
 #include <string>
 #include <iosfwd>
 #include <utility>
-#include <algorithm>
 #include <sstream>
 #ifdef EXV_HAVE_STDINT_H
 # include <stdint.h>
@@ -293,64 +292,13 @@ namespace Exiv2 {
 
     /*!
       @brief Converts a string in the form "%Y:%m:%d %H:%M:%S", e.g.,
-             "2007:05:24 12:31:55" to broken down time format,
+             "2007:05:24 12:31:55" to broken down time format, 
              returns 0 if successful, else 1.
      */
     int exifTime(const char* buf, struct tm* tm);
 
 // *****************************************************************************
 // template and inline definitions
-
-    /*!
-      @brief Find an element that matches \em key in the array \em src.
-      
-      Designed to be used with lookup tables as shown in the example below.
-      Requires a %Key structure (ideally in the array) and a comparison operator
-      to compare a key with an array element.  The size of the array is
-      determined automagically. Thanks to Stephan Broennimann for this nifty
-      implementation.
-
-      @code
-      struct Bar {
-          int i;
-          int k;
-          const char* data;
-      
-          struct Key;
-          bool operator==(const Bar::Key& rhs) const;
-      };
-      
-      struct Bar::Key {
-          Key(int a, int b) : i(a), k(b) {}
-          int i;
-          int k;
-      };
-      
-      bool Bar::operator==(const Bar::Key& key) const // definition
-      {
-          return i == key.i && k == key.k;
-      }
-      
-      const Bar bars[] = {
-          { 1, 1, "bar data 1" }, 
-          { 1, 2, "bar data 2" }, 
-          { 1, 3, "bar data 3" }
-      };
-      
-      int main ( void ) {
-          const Bar* bar = find(bars, Bar::Key(1, 3));
-          if (bar) std::cout << bar->data << "\n";
-          else std::cout << "Key not found.\n";
-          return 0;
-      }  
-      @endcode
-    */
-    template<typename T, typename K, int N>
-    const T* find(T (&src)[N], const K& key)
-    {
-        const T* rc = std::find(src, src + N, key);
-        return rc == src + N ? 0 : rc;
-    }
 
     //! Utility function to convert the argument of any type to a string
     template<typename T>

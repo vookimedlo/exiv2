@@ -55,24 +55,6 @@ EXIV2_RCSID("@(#) $Id$");
 // class member definitions
 namespace Exiv2 {
 
-    // Roger Larsson: My guess is that focuspoints will follow autofocus sensor
-    // module. Note that relative size and position will vary depending on if
-    // "wide" or not
-    //! Focus points for Nikon cameras, used for Nikon 1 and Nikon 3 makernotes.
-    static const char *nikonFocuspoints[] = {
-        "Center",
-        "Top",
-        "Bottom",
-        "Left",
-        "Right",
-        "Upper left",
-        "Upper right",
-        "Lower left",
-        "Lower right",
-        "Leftmost",
-        "Rightmost"
-    };
-
     //! @cond IGNORE
     Nikon1MakerNote::RegisterMn::RegisterMn()
     {
@@ -204,27 +186,17 @@ namespace Exiv2 {
                                                const Value& value)
     {
         if (value.count() > 1) {
-            unsigned long focusPoint = value.toLong(1);
-
-            os << value.toLong(0) << "; ";
-            switch (focusPoint) {
-            // Could use array nikonFokuspoints
-            case 0:
-            case 1: 
-            case 2: 
-            case 3: 
-            case 4: 
-                os << nikonFocuspoints[focusPoint];
-                break;
-            default:
-                os << value;
-                if (focusPoint < sizeof(nikonFocuspoints)/sizeof(nikonFocuspoints[0]))
-                    os << " guess " << nikonFocuspoints[focusPoint];
-                break;
+            switch (value.toLong(1)) {
+            case 0: os << "Center"; break;
+            case 1: os << "Top"; break;
+            case 2: os << "Bottom"; break;
+            case 3: os << "Left"; break;
+            case 4: os << "Right"; break;
+            default: os << "(" << value << ")"; break;
             }
         }
         else {
-            os << value;
+            os << "(" << value << ")";
         }
         return os;
     }
@@ -458,7 +430,7 @@ namespace Exiv2 {
         TagInfo(0x0089, "Bracketing", "Bracketing", "Bracketing", nikon3IfdId, makerTags, unsignedShort, print0x0089),
         TagInfo(0x008a, "0x008a", "0x008a", "Unknown", nikon3IfdId, makerTags, unsignedShort, printValue),
         TagInfo(0x008b, "LensFStops", "LensFStops", "Number of lens stops", nikon3IfdId, makerTags, undefined, print0x008b),
-        TagInfo(0x008c, "NEFCurve1", "NEFCurve1", "NEF curve 1", nikon3IfdId, makerTags, undefined, printValue),
+//        TagInfo(0x008c, "NEFCurve1", "NEFCurve1", "NEF curve 1", nikon3IfdId, makerTags, xxx, printValue),
         TagInfo(0x008d, "ColorMode", "ColorMode", "Color mode", nikon3IfdId, makerTags, asciiString, printValue),
         TagInfo(0x008f, "SceneMode", "SceneMode", "Scene mode", nikon3IfdId, makerTags, asciiString, printValue),
         TagInfo(0x0090, "LightingType", "LightingType", "Lighting type", nikon3IfdId, makerTags, asciiString, printValue),
@@ -466,11 +438,11 @@ namespace Exiv2 {
         TagInfo(0x0092, "HueAdjustment", "HueAdjustment", "Hue adjustment", nikon3IfdId, makerTags, signedShort, printValue),
         TagInfo(0x0094, "Saturation", "Saturation", "Saturation adjustment", nikon3IfdId, makerTags, signedShort, printValue),
         TagInfo(0x0095, "NoiseReduction", "NoiseReduction", "Noise reduction", nikon3IfdId, makerTags, asciiString, printValue),
-        TagInfo(0x0096, "ToneCurve", "ToneCurve", "Tone curve", nikon3IfdId, makerTags, undefined, printValue),
+//        TagInfo(0x0096, "NEFCurve2", "NEFCurve2", "NEF curve 2", nikon3IfdId, makerTags, xxx, printValue),
         TagInfo(0x0097, "ColorBalance2", "ColorBalance2", "Color balance 2", nikon3IfdId, makerTags, undefined, printValue),
         TagInfo(0x0098, "LensData", "LensData", "Lens data", nikon3IfdId, makerTags, undefined, print0x0098),
         TagInfo(0x0099, "NEFThumbnailSize", "NEFThumbnailSize", "NEF thumbnail size", nikon3IfdId, makerTags, unsignedShort, printValue),
-        TagInfo(0x009a, "SensorPixelSize", "SensorPixelSize", "Sensor pixel size", nikon3IfdId, makerTags, unsignedRational, printValue),
+        TagInfo(0x009a, "0x009a", "0x009a", "Unknown", nikon3IfdId, makerTags, unsignedRational, printValue),
         TagInfo(0x009b, "0x009b", "0x009b", "Unknown", nikon3IfdId, makerTags, unsignedShort, printValue),
         TagInfo(0x009f, "0x009f", "0x009f", "Unknown", nikon3IfdId, makerTags, signedShort, printValue),
         TagInfo(0x00a0, "SerialNumber", "SerialNumber", "Camera serial number", nikon3IfdId, makerTags, asciiString, printValue),
@@ -641,68 +613,36 @@ namespace Exiv2 {
     std::ostream& Nikon3MakerNote::print0x0088(std::ostream& os,
                                                const Value& value)
     {
-        if (value.size() != 4) { // Size is 4 even for those who map this way...
-            os << "(" << value << ")";
+        // Mappings taken from Exiftool
+        long afpos = value.toLong();
+        switch (afpos) {
+        case 0x0000: os << "Center"; break;
+        case 0x0100: os << "Top"; break;
+        case 0x0200: os << "Bottom"; break;
+        case 0x0300: os << "Left"; break;
+        case 0x0400: os << "Right"; break;
+
+        // D70
+        case 0x00001: os << "Single area, center"; break;
+        case 0x10002: os << "Single area, top"; break;
+        case 0x20004: os << "Single area, bottom"; break;
+        case 0x30008: os << "Single area, left"; break;
+        case 0x40010: os << "Single area, right"; break;
+
+        case 0x1000001: os << "Dynamic area, center"; break;
+        case 0x1010002: os << "Dynamic area, top"; break;
+        case 0x1020004: os << "Dynamic area, bottom"; break;
+        case 0x1030008: os << "Dynamic area, left"; break;
+        case 0x1040010: os << "Dynamic area, right"; break;
+
+        case 0x2000001: os << "Closest subject, center"; break;
+        case 0x2010002: os << "Closest subject, top"; break;
+        case 0x2020004: os << "Closest subject, bottom"; break;
+        case 0x2030008: os << "Closest subject, left"; break;
+        case 0x2040010: os << "Closest subject, right"; break;
+
+        default: os << "(" << value << ")"; break;
         }
-        else {
-            // Mapping by Roger Larsson
-            unsigned focusmetering = value.toLong(0);
-            unsigned focuspoint = value.toLong(1);
-            unsigned focusused = (value.toLong(2) << 8) + value.toLong(3);
-            enum {standard, wide} combination = standard;
-            const unsigned focuspoints =   sizeof(nikonFocuspoints) 
-                                         / sizeof(nikonFocuspoints[0]);
-
-            if (focusmetering == 0 && focuspoint == 0 && focusused == 0) {
-                // Special case, in Manual focus and with Nikon compacts
-                // this indicates that the field has no meaning.
-                // But when acually in "Single area, Center" this can mean
-                // that focus was not found (try this in AF-C mode)
-                // TODO: handle the meaningful case (interacts with other fields)
-                os << "N/A";
-                return os;
-            }
-
-            switch (focusmetering) {
-            case 0x00: os << "Single area"; break; // D70, D200
-            case 0x01: os << "Dynamic area"; break; // D70, D200
-            case 0x02: os << "Closest subject"; break; // D70, D200
-            case 0x03: os << "Group dynamic-AF"; break; // D200
-            case 0x04: os << "Single area (wide)"; combination = wide; break; // D200
-            case 0x05: os << "Dynamic area (wide)"; combination = wide; break; // D200
-            default: os << "(" << focusmetering << ")"; break;
-            }
-
-            char sep = ';';
-            if (focusmetering != 0x02) { //  No user selected point for Closest subject
-                os << sep << ' ';
-
-                // What focuspoint did the user select?
-                if (focuspoint < focuspoints) {
-                    os << nikonFocuspoints[focuspoint];
-                    // TODO: os << position[fokuspoint][combination]
-                }
-                else
-                    os << "(" << focuspoint << ")";
-
-                sep = ',';
-            }
-
-            // What fokuspoints(!) did the camera use? add if differs
-            if (focusused == 0)
-                os << sep << " none";
-            else if (focusused != 1U<<focuspoint) {
-                // selected point was not the actually used one 
-                // (Roger Larsson: my interpretation, verify)
-                os << sep;
-                for (unsigned fpid=0; fpid<focuspoints; fpid++)
-                    if (focusused & 1<<fpid)
-                        os << ' ' << nikonFocuspoints[fpid];
-            }
-
-            os << " used";
-        }
-
         return os;
     }
 

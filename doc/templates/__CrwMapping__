@@ -104,8 +104,7 @@ Exif.Photo.ExposureTime (not used on write)</td>
 <td>0x300a</td>
 </tr>
 <tr class="OddRow">
-<td>Exif.Image.Orientation <br>
-Exif.Photo.PixelXDimension <br>
+<td>Exif.Photo.PixelXDimension <br>
 Exif.Photo.PixelYDimension</td>
 <td>0x1810</td>
 <td>0x300a</td>

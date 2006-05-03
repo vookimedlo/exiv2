@@ -502,8 +502,7 @@ namespace Exiv2 {
         ExifData& operator=(const ExifData& rhs);
         /*!
           @brief Load the Exif data from a byte buffer. The data buffer
-                 must start with the TIFF header. This method is deprecated.
-                 Use ImageFactory::open() instead.
+                 must start with the TIFF header.
           @param buf Pointer to the data buffer to read from
           @param len Number of bytes in the data buffer
           @return 0 if successful.
@@ -868,7 +867,7 @@ namespace Exiv2 {
         return exifDatum;
     }
     /*!
-      @brief Returns the IfdId of the first Exif makernote tag it finds in the
+      @brief Returns the IfdId of the first Exif makernote tag it finds in the 
              Exif metadata or ifdIdNotSet if there is no Exif makernote tag.
     */
     IfdId hasMakerNote(const ExifData& exifData);

@@ -185,7 +185,7 @@ namespace Exiv2 {
     void Exifdatum::setValue(const Entry& e, ByteOrder byteOrder)
     {
         TypeId t = TypeId(e.type());
-        // Hack: On the fly type conversion for Exif.Photo.UserComment
+        // Hack: On the fly type conversion for Exif.Photo.UserComment 
         if (e.tag() == 0x9286 && e.ifdId() == exifIfdId && e.type() == undefined) {
             t = comment;
         }
@@ -465,8 +465,6 @@ namespace Exiv2 {
 
     int ExifData::load(const byte* buf, long len)
     {
-        if (!buf || len == 0) return -1;
-
         // Copy the data buffer
         delete[] pData_;
         pData_ = new byte[len];
@@ -987,10 +985,6 @@ namespace Exiv2 {
             else {
                 thumbnail = Thumbnail::AutoPtr(new TiffThumbnail);
             }
-        }
-        else {
-            pos = findKey(ExifKey("Exif.Thumbnail.JPEGInterchangeFormat"));
-            if (pos != end()) thumbnail = Thumbnail::AutoPtr(new JpegThumbnail);
         }
         return thumbnail;
 
