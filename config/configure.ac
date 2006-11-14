@@ -21,8 +21,7 @@ AC_PROG_RANLIB
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
-AC_CHECK_LIBM()
-LIBS="$LIBS $LIBM"
+AC_CHECK_LIB(m, exp, , AC_MSG_ERROR([libm not found.]))
 CHECK_ZLIB()
 AC_SUBST(HAVE_LIBZ,$HAVE_LIBZ)
 

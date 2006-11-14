@@ -36,8 +36,8 @@ EXIV2_RCSID("@(#) $Id$")
 # include "exv_conf.h"
 #endif
 
-#include "tiffcomposite.hpp"  // Do not change the order of these 2 includes,
-#include "tiffvisitor.hpp"    // see bug #487
+#include "tiffvisitor.hpp"
+#include "tiffcomposite.hpp"
 #include "tiffparser.hpp"
 #include "makernote2.hpp"
 #include "exif.hpp"
@@ -558,7 +558,7 @@ namespace Exiv2 {
         const uint16_t n = getUShort(p, byteOrder());
         p += 2;
         // Sanity check with an "unreasonably" large number
-        if (n > 256) {
+        if (n > 512) {
 #ifndef SUPPRESS_WARNINGS
             std::cerr << "Error: " 
                       << "Directory " << object->groupName() << " with " 
