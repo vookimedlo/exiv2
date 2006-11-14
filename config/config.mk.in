@@ -51,11 +51,10 @@ endif
 CXXCPP = @CXXCPP@
 
 # Preprocessor flags
-CPPFLAGS = -I. @CPPFLAGS@
+CPPFLAGS = @CPPFLAGS@
 
-# Linker flags and libraries
+# Linker flags
 LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
 
 # Suffix of executables
 EXEEXT := @EXEEXT@
@@ -71,13 +70,9 @@ ifeq ($(GCC),yes)
 endif
 
 # **********************************************************************
-# Libraries and Functions
-HAVE_LIBZ = @HAVE_LIBZ@
-HAVE_TIMEGM = @HAVE_TIMEGM@
-
-# **********************************************************************
 # Advanced auto-dependency generation
 # http://make.paulandlesley.org/autodep.html
+
 DEP_TRACKING = @DEP_TRACKING@
 
 ifdef DEP_TRACKING
@@ -96,6 +91,17 @@ else
 endif
 
 endif
+
+# **********************************************************************
+# Global includes, libraries and defines
+INCS = -I. 
+LIBS = @LIBS@
+DEFS = 
+
+# **********************************************************************
+# Libraries and Functions
+HAVE_LIBZ = @HAVE_LIBZ@
+HAVE_TIMEGM = @HAVE_TIMEGM@
 
 # **********************************************************************
 # Installation programs
