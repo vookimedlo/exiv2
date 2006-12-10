@@ -34,8 +34,7 @@ EXIV2_RCSID("@(#) $Id$")
 #include "ifd.hpp"
 #include "types.hpp"
 #include "error.hpp"
-#include "tags.hpp"              // for ExifTags::ifdName
-#include "i18n.h"                // NLS support.
+#include "tags.hpp"                             // for ExifTags::ifdName
 
 // + standard includes
 #include <iostream>
@@ -699,13 +698,13 @@ namespace Exiv2 {
     {
         if (entries_.size() == 0) return;
         // Print a header
-        os << prefix << _("IFD Offset") << ": 0x"
+        os << prefix << "IFD Offset: 0x"
            << std::setw(8) << std::setfill('0') << std::hex << std::right
            << offset_
-           << ",   " << _("IFD Entries") << ": "
+           << ",   IFD Entries: "
            << std::setfill(' ') << std::dec << std::right
            << static_cast<unsigned int>(entries_.size()) << "\n"
-           << prefix << _("Entry     Tag  Format   (Bytes each)  Number  Offset\n")
+           << prefix << "Entry     Tag  Format   (Bytes each)  Number  Offset\n"
            << prefix << "-----  ------  ---------------------  ------  -----------\n";
         // Print IFD entries
         const const_iterator b = entries_.begin();
@@ -737,14 +736,14 @@ namespace Exiv2 {
                << "\n";
         }
         if (hasNext_) {
-            os << prefix << _("Next IFD") << ": 0x"
+            os << prefix << "Next IFD: 0x"
                << std::setw(8) << std::setfill('0') << std::hex
                << std::right << next() << "\n";
         }
         // Print data of IFD entries
         for (i = b; i != e; ++i) {
             if (i->size() > 4) {
-                os << _("Data of entry") << " " << static_cast<int>(i - b) << ":\n";
+                os << "Data of entry " << static_cast<int>(i - b) << ":\n";
                 hexdump(os, i->data(), i->size(), offset_ + i->offset());
             }
         }

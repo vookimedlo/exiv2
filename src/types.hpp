@@ -311,12 +311,6 @@ namespace Exiv2 {
      */
     int exifTime(const char* buf, struct tm* tm);
 
-    /*!
-      @brief Translate a string using the gettext framework. This wrapper hides
-             all the implementation details from the interface.
-     */
-    const char* exvGettext(const char* str);
-
 // *****************************************************************************
 // template and inline definitions
 

@@ -16,7 +16,6 @@
 
 all install uninstall: config/config.mk
 	cd src && $(MAKE) $(MAKECMDGOALS)
-	cd po && $(MAKE) $(MAKECMDGOALS)
 
 doc: config/config.mk
 	cd doc && $(MAKE) $(MAKECMDGOALS)
@@ -28,7 +27,6 @@ mostlyclean clean: config/config.mk
 	cd src && $(MAKE) $(MAKECMDGOALS)
 	cd doc && $(MAKE) $(MAKECMDGOALS)
 	cd config && $(MAKE) $(MAKECMDGOALS)
-	cd po && $(MAKE) $(MAKECMDGOALS)
 
 # `make distclean' also removes files created by configuring 
 # the program. Running `make all distclean' prepares the project 
