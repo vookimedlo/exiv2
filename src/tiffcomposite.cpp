@@ -143,8 +143,7 @@ namespace Exiv2 {
           setSize_(0),
           origData_(0),
           origSize_(0),
-          pRoot_(0),
-          decoded_(false)
+          pRoot_(0)
     {
         assert(arrayCfg != 0);
     }
@@ -163,8 +162,7 @@ namespace Exiv2 {
           setSize_(setSize),
           origData_(0),
           origSize_(0),
-          pRoot_(0),
-          decoded_(false)
+          pRoot_(0)
     {
         // We'll figure out the correct cfg later
         assert(cfgSelFct != 0);
@@ -284,8 +282,7 @@ namespace Exiv2 {
           setSize_(rhs.setSize_),
           origData_(rhs.origData_),
           origSize_(rhs.origSize_),
-          pRoot_(rhs.pRoot_),
-          decoded_(false)
+          pRoot_(rhs.pRoot_)
     {
     }
 
@@ -844,7 +841,6 @@ namespace Exiv2 {
     {
         TiffComponent* tc = tiffComponent.release();
         elements_.push_back(tc);
-        setDecoded(true);
         return tc;
     } // TiffBinaryArray::doAddChild
 
@@ -1040,7 +1036,7 @@ namespace Exiv2 {
 
     uint32_t TiffBinaryArray::doCount() const
     {
-        if (cfg() == 0 || !decoded()) return TiffEntryBase::doCount();
+        if (cfg() == 0) return TiffEntryBase::doCount();
 
         if (elements_.empty()) return 0;
 
@@ -1370,12 +1366,12 @@ namespace Exiv2 {
                                       uint32_t  dataIdx,
                                       uint32_t& imageIdx)
     {
-        if (cfg() == 0 || !decoded()) return TiffEntryBase::doWrite(ioWrapper,
-                                                                    byteOrder,
-                                                                    offset,
-                                                                    valueIdx,
-                                                                    dataIdx,
-                                                                    imageIdx);
+        if (cfg() == 0) return TiffEntryBase::doWrite(ioWrapper,
+                                                      byteOrder,
+                                                      offset,
+                                                      valueIdx,
+                                                      dataIdx,
+                                                      imageIdx);
         if (cfg()->byteOrder_ != invalidByteOrder) byteOrder = cfg()->byteOrder_;
         // Tags must be sorted in ascending order
         std::sort(elements_.begin(), elements_.end(), cmpTagLt);
@@ -1685,7 +1681,7 @@ namespace Exiv2 {
 
     uint32_t TiffBinaryArray::doSize() const
     {
-        if (cfg() == 0 || !decoded()) return TiffEntryBase::doSize();
+        if (cfg() == 0) return TiffEntryBase::doSize();
 
         if (elements_.empty()) return 0;
 

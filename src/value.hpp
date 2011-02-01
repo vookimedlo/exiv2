@@ -1231,10 +1231,7 @@ namespace Exiv2 {
         //! @name Creators
         //@{
         //! Default Constructor.
-        ValueType();
-        //! Constructor.
-        // The default c'tor and this one can be combined, but that causes MSVC 7.1 to fall on its nose
-        explicit ValueType(TypeId typeId);
+        explicit ValueType(TypeId typeId =getType<T>());
         //! Constructor.
         ValueType(const byte* buf, long len, ByteOrder byteOrder, TypeId typeId =getType<T>());
         //! Constructor.
@@ -1482,12 +1479,6 @@ namespace Exiv2 {
     inline long toData(byte* buf, double t, ByteOrder byteOrder)
     {
         return d2Data(buf, t, byteOrder);
-    }
-
-    template<typename T>
-    ValueType<T>::ValueType()
-        : Value(getType<T>()), pDataArea_(0), sizeDataArea_(0)
-    {
     }
 
     template<typename T>
