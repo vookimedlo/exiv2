@@ -226,28 +226,6 @@ for type in 8BIM AgHg DCSR PHUT; do
     done
 done
 
-num=831
-filename=exiv2-bug$num.tif
-printf "$num " >&3
-echo '------>' Bug $num '<-------' >&2
-cp -f ../data/mini9.tif $filename
-$bin/exiv2 -v -Qd -M'set Exif.Image.ImageDescription Just GIMP' $filename
-$bin/exiv2 -v -pa $filename
-
-num=836
-filename=exiv2-bug$num.eps
-echo '------>' Bug $num '<-------' >&2
-cp -f ../data/$filename $filename
-if [ -e $filename/rsrc ]; then
-    printf "$num " >&3
-    cp -f ../data/$filename.rsrc $filename/rsrc
-    $bin/exiv2 -M'set Exif.Photo.UserComment Test' $filename
-    diff -q ../data/$filename.rsrc $filename/rsrc
-else
-    # skip this test on systems which do not have resource forks
-    printf "($num skipped) " >&3
-fi
-
 ) 3>&1 > $results 2>&1
 
 printf "\n"
