@@ -30,6 +30,7 @@
 #include "rcsid_int.hpp"
 EXIV2_RCSID("@(#) $Id$")
 
+
 // *****************************************************************************
 // included header files
 #ifdef _MSC_VER
@@ -225,7 +226,7 @@ void Params::version(bool verbose,std::ostream& os) const
             "License along with this program; if not, write to the Free\n"
             "Software Foundation, Inc., 51 Franklin Street, Fifth Floor,\n"
             "Boston, MA 02110-1301 USA\n");
-	
+
 	if ( verbose ) dumpLibraryInfo(os);
 }
 
@@ -1165,7 +1166,7 @@ namespace {
         return cmdIdAndString[i].cmdId_;
     }
 
-    std::string parseEscapes(const std::string& input) 
+    std::string parseEscapes(const std::string& input)
     {
         std::string result = "";
         for (unsigned int i = 0; i < input.length(); ++i) {
@@ -1242,4 +1243,4 @@ namespace {
     }
 
 }
-        
+
