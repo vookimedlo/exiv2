@@ -30,7 +30,6 @@
 #include "rcsid_int.hpp"
 EXIV2_RCSID("@(#) $Id$")
 
-
 // *****************************************************************************
 // included header files
 #ifdef _MSC_VER
