@@ -226,11 +226,9 @@ namespace Exiv2 {
         //! @name Manipulators
         //@{
         /*!
-          @brief Assignment operator. Transfers the buffer and releases the
-                 buffer at the original object similar to std::auto_ptr, i.e.,
-                 the original object is modified.
+          @brief Assignment operator.
          */
-        DataBuf& operator=(DataBuf& rhs);
+        DataBuf& operator=(DataBuf const& rhs);
         /*!
           @brief Allocate a data buffer of at least the given size. Note that if
                  the requested \em size is less than the current buffer size, no
@@ -256,7 +254,6 @@ namespace Exiv2 {
          */
         //@{
         DataBuf(DataBufRef rhs) : pData_(rhs.p.first), size_(rhs.p.second) {}
-        DataBuf& operator=(DataBufRef rhs) { reset(rhs.p); return *this; }
         operator DataBufRef() { return DataBufRef(release()); }
         //@}
 
