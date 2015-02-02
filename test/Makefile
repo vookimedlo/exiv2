@@ -80,7 +80,7 @@ TESTS  = addmoddel.sh         \
          conversions.sh
 
 # video tests
-TESTV  = video-test.sh         
+TESTV  = video-test.sh
 TESTVW = write-video-test.sh
 
 # EPS tests
@@ -107,8 +107,8 @@ test:
 testv:
 	@for t in /video ; do \
 		if [ ! -e data/$$t ]; then \
-	echo svn export '$(SVN)'$$t data$$t -r 3100 ; \
-	     svn export '$(SVN)'$$t data$$t -r 3100 ; \
+	echo svn export '$(SVN)'$$t data$$t ; \
+	     svn export '$(SVN)'$$t data$$t ; \
 	fi ; done
 	@list='$(TESTV)'; for p in $$list; do \
 	    echo Running $$p ...; \

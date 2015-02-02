@@ -60,7 +60,7 @@ namespace Exiv2 {
 
         //! @name Manipulators
         //@{
-        bool read(const byte* pData, uint32_t size);
+        bool read(const byte* pData, uint64_t size);
         //@}
 
         //! @name Accessors

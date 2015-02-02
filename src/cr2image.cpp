@@ -242,7 +242,7 @@ namespace Exiv2 {
     {
     }
 
-    bool Cr2Header::read(const byte* pData, uint32_t size)
+    bool Cr2Header::read(const byte* pData, uint64_t size)
     {
         if (size < 16) return false;
 

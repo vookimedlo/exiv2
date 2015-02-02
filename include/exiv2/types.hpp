@@ -21,7 +21,7 @@
 /*!
   @file    types.hpp
   @brief   Type definitions for %Exiv2 and related functionality
-  @version $Rev: 3090 $
+  @version $Rev: 3585 $
   @author  Andreas Huggel (ahu)
            <a href="mailto:ahuggel@gmx.net">ahuggel@gmx.net</a>
   @date    09-Jan-04, ahu: created<BR>
@@ -31,8 +31,19 @@
 #ifndef TYPES_HPP_
 #define TYPES_HPP_
 
+// *****************************************************************************
 // included header files
-#include "config.h"
+#ifdef _MSC_VER
+# include "exv_msvc.h"
+#else
+# include "exv_conf.h"
+#endif
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+# ifndef  __MINGW__
+#  define __MINGW__
+# endif
+#endif
 
 #include "version.hpp"
 
@@ -43,6 +54,7 @@
 #include <utility>
 #include <algorithm>
 #include <sstream>
+#include <cstring>
 
 #ifdef EXV_HAVE_STDINT_H
 # include <stdint.h>
@@ -61,6 +73,13 @@ typedef __int64          int64_t;
 // MSVC macro to convert a string to a wide string
 #ifdef EXV_UNICODE_PATH
 # define EXV_WIDEN(t) L ## t
+#endif
+
+#if defined(__MINGW__) || defined(_MSC_VER)
+typedef	unsigned char		u_int8_t;
+typedef	unsigned short		u_int16_t;
+typedef	unsigned int		u_int32_t;
+typedef	unsigned long long	u_int64_t;
 #endif
 
 /*!
@@ -191,7 +210,7 @@ namespace Exiv2 {
         //! Default constructor
         DataBuf() : pData_(0), size_(0) {}
         //! Constructor with an initial buffer size
-        explicit DataBuf(long size) : pData_(new byte[size]), size_(size) {}
+        explicit DataBuf(long size) : pData_(new byte[size]), size_(size) { std::memset(pData_, 0x0, size_); }
         //! Constructor, copies an existing buffer
         DataBuf(const byte* pData, long size);
         /*!
@@ -199,7 +218,7 @@ namespace Exiv2 {
                  object similar to std::auto_ptr, i.e., the original object is
                  modified.
          */
-        DataBuf(DataBuf& rhs);
+        DataBuf(const DataBuf& rhs);
         //! Destructor, deletes the allocated buffer
         ~DataBuf() { delete[] pData_; }
         //@}
@@ -207,11 +226,9 @@ namespace Exiv2 {
         //! @name Manipulators
         //@{
         /*!
-          @brief Assignment operator. Transfers the buffer and releases the
-                 buffer at the original object similar to std::auto_ptr, i.e.,
-                 the original object is modified.
+          @brief Assignment operator.
          */
-        DataBuf& operator=(DataBuf& rhs);
+        DataBuf& operator=(DataBuf const& rhs);
         /*!
           @brief Allocate a data buffer of at least the given size. Note that if
                  the requested \em size is less than the current buffer size, no
@@ -237,7 +254,6 @@ namespace Exiv2 {
          */
         //@{
         DataBuf(DataBufRef rhs) : pData_(rhs.p.first), size_(rhs.p.second) {}
-        DataBuf& operator=(DataBufRef rhs) { reset(rhs.p); return *this; }
         operator DataBufRef() { return DataBufRef(release()); }
         //@}
 

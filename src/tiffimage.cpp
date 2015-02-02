@@ -535,7 +535,7 @@ namespace Exiv2 {
         { 26, ttUnsignedShort, 1 }, // AFAreaHeight
         { 28, ttUnsignedShort, 1 }, // ContrastDetectAFInFocus
     };
-    
+
     //! Nikon AF Fine Tune binary array - configuration
     extern const ArrayCfg nikonAFTCfg = {
         nikonAFTId,       // Group for the elements
@@ -1582,13 +1582,13 @@ namespace Exiv2 {
 
         // Nikon3 auto focus
         {  Tag::all, nikonAfId,        newTiffBinaryElement                      },
-        
+
         // Nikon3 auto focus 2
         {  Tag::all, nikonAf2Id,       newTiffBinaryElement                      },
-        
+
         // Nikon3 AF Fine Tune
         {  Tag::all, nikonAFTId,       newTiffBinaryElement                      },
-        
+
         // Nikon3 file info
         {  Tag::all, nikonFiId,        newTiffBinaryElement                      },
 
@@ -2003,7 +2003,7 @@ namespace Exiv2 {
     {
     }
 
-    bool TiffHeaderBase::read(const byte* pData, uint32_t size)
+    bool TiffHeaderBase::read(const byte* pData, uint64_t size)
     {
         if (!pData || size < 8) return false;
 
