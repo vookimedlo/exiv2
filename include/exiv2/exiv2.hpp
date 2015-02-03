@@ -64,7 +64,6 @@
 #include "tiffimage.hpp"
 #include "types.hpp"
 #include "value.hpp"
-#include "version.hpp"
 #include "xmp.hpp"
 #include "xmpsidecar.hpp"
 
