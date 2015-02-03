@@ -45,8 +45,6 @@
 # endif
 #endif
 
-#include "version.hpp"
-
 // + standard includes
 #include <string>
 #include <vector>

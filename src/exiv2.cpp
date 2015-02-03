@@ -33,6 +33,7 @@ EXIV2_RCSID("@(#) $Id$")
 // included header files
 #include "config.h"
 
+#include "version.hpp"
 #include "exiv2app.hpp"
 #include "actions.hpp"
 #include "utils.hpp"
@@ -434,7 +435,7 @@ int Params::evalKey( const std::string& optarg)
         std::cerr << progname()
               << ": " << _("Option") << " -g: "
               << _("Invalid regexp") << " \"" << optarg << "\": " << buffer << "\n";
-      
+
         // free the memory and drop the regexp
         delete[] buffer;
         regfree( pRegex);
@@ -1114,7 +1115,7 @@ namespace {
             || cmdEnd == std::string::npos
             || keyStart == std::string::npos) {
             std::string cmdLine ;
-#if defined(_MSC_VER) || defined(__MINGW__)     
+#if defined(_MSC_VER) || defined(__MINGW__)
             for ( int i = 1 ; i < __argc ; i++ ) { cmdLine += std::string(" ") + formatArg(__argv[i]) ; }
 #endif
             throw Exiv2::Error(1, Exiv2::toString(num)

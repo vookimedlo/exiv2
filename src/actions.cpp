@@ -35,6 +35,7 @@ EXIV2_RCSID("@(#) $Id$")
 #ifndef EXV_HAVE_TIMEGM
 # include "timegm.h"
 #endif
+#include "version.hpp"
 #include "actions.hpp"
 #include "exiv2app.hpp"
 #include "image.hpp"
