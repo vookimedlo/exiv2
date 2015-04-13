@@ -13,6 +13,7 @@ libtool
 bin/
 build/
 build/*
+include/exiv2/exv_conf.h
 CMakeLists.txt.user
 config/autom4te.cache/
 config/config.h
