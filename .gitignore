@@ -50,6 +50,8 @@ src/doxygen.hpp
 src/exv_conf.h
 src/lib
 test/tmp/*
+test/data/video/
+test/data/video/*
 doc/html
 
 doc/templates/Exif

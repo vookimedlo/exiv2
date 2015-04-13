@@ -649,6 +649,10 @@ enum audioDescTags{
     AudioFormat, AudioVendorID = 4, AudioChannels, AudioSampleRate = 7, MOV_AudioFormat = 13
 };
 
+enum nikonNCTGTags {
+PictureControlData = 0x2000023 , WorldTime = 0x2000024
+} ;
+
 /*!
  * \brief equalsQTimeTag overloaded function to handle tag Array
  *						It will compare all the tags in a array.
@@ -1465,7 +1469,7 @@ void QuickTimeVideo::NikonTagsDecoder(uint32_t size_external)
 
             io_->read(buf.pData_, 2);
 
-            if(TagID == 0x2000023){
+            if(TagID == PictureControlData){
                 uint64_t local_pos = io_->tell();
                 dataLength = Exiv2::getUShort(buf.pData_, bigEndian);
                 std::memset(buf.pData_, 0x0, buf.size_);
@@ -1520,7 +1524,7 @@ void QuickTimeVideo::NikonTagsDecoder(uint32_t size_external)
                 io_->read(buf.pData_, 1);	xmpData_["Xmp.video.ToningSaturation"] = (int)buf.pData_[0];
                 io_->seek(local_pos + dataLength, BasicIo::beg);
             }
-            else if(TagID == 0x2000024){
+            else if(TagID == WorldTime){
                 uint64_t local_pos = io_->tell();
                 dataLength         = Exiv2::getUShort(buf.pData_, bigEndian);
                 std::memset(buf.pData_, 0x0, buf.size_);
@@ -1639,7 +1643,7 @@ void QuickTimeVideo::NikonTagsDecoder(uint32_t size_external)
             std::memset(buf.pData_, 0x0, buf.size_);
             io_->read(buf.pData_, 2);
 
-            if(TagID == 0x2000023){
+            if(TagID == PictureControlData){
                 uint64_t local_pos = io_->tell();
                 dataLength = Exiv2::getUShort(buf.pData_, bigEndian);
                 writeShortData(xmpData_["Xmp.video.PictureControlVersion"],4);
@@ -1765,7 +1769,7 @@ void QuickTimeVideo::NikonTagsDecoder(uint32_t size_external)
                 }
                 io_->seek(local_pos + dataLength, BasicIo::beg);
             }
-            else if(TagID == 0x2000024){
+            else if(TagID == WorldTime){
                 uint64_t local_pos = io_->tell();
                 dataLength = Exiv2::getUShort(buf.pData_, bigEndian);
                 std::memset(buf.pData_, 0x0, buf.size_);
