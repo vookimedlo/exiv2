@@ -1211,6 +1211,7 @@ void QuickTimeVideo::keysTagDecoder(uint32_t size)
 
 void QuickTimeVideo::trackApertureTagDecoder(uint32_t size)
 {
+    std::string apertureType = "";
     DataBuf buf(4), buf2(2);
     uint64_t cur_pos = io_->tell();
     if(!d->m_modifyMetadata){
@@ -1218,31 +1219,20 @@ void QuickTimeVideo::trackApertureTagDecoder(uint32_t size)
         while(n--){
             io_->seek(static_cast<int32_t>(4), BasicIo::cur); io_->read(buf.pData_, 4);
 
-            if(UtilsVideo::compareTagValue(buf, "clef")){
+            apertureType = "";
+            if(UtilsVideo::compareTagValue(buf, "clef"))
+                apertureType = "CleanAperture";
+            else if(UtilsVideo::compareTagValue(buf, "prof"))
+                apertureType = "ProductionAperture";
+            else if(UtilsVideo::compareTagValue(buf, "enof"))
+                apertureType = "EncodedPixels";
+            if(apertureType.length() != 0){
                 io_->seek(static_cast<int32_t>(4), BasicIo::cur);
                 io_->read(buf.pData_, 2); io_->read(buf2.pData_, 2);
-                xmpData_["Xmp.video.CleanApertureWidth"]	=	Exiv2::toString(getUShort(buf.pData_, bigEndian))
+                xmpData_["Xmp.video."+ apertureType +"Width"]	=	Exiv2::toString(getUShort(buf.pData_, bigEndian))
                         + "." + Exiv2::toString(getUShort(buf2.pData_, bigEndian));
                 io_->read(buf.pData_, 2); io_->read(buf2.pData_, 2);
-                xmpData_["Xmp.video.CleanApertureHeight"]	=	Exiv2::toString(getUShort(buf.pData_, bigEndian))
-                        + "." + Exiv2::toString(getUShort(buf2.pData_, bigEndian));
-            }
-            else if(UtilsVideo::compareTagValue(buf, "prof")){
-                io_->seek(static_cast<int32_t>(4), BasicIo::cur);
-                io_->read(buf.pData_, 2); io_->read(buf2.pData_, 2);
-                xmpData_["Xmp.video.ProductionApertureWidth"]	 =	 Exiv2::toString(getUShort(buf.pData_, bigEndian))
-                        + "." + Exiv2::toString(getUShort(buf2.pData_, bigEndian));
-                io_->read(buf.pData_, 2); io_->read(buf2.pData_, 2);
-                xmpData_["Xmp.video.ProductionApertureHeight"]	 =	 Exiv2::toString(getUShort(buf.pData_, bigEndian))
-                        + "." + Exiv2::toString(getUShort(buf2.pData_, bigEndian));
-            }
-            else if(UtilsVideo::compareTagValue(buf, "enof")){
-                io_->seek(static_cast<int32_t>(4), BasicIo::cur);
-                io_->read(buf.pData_, 2); io_->read(buf2.pData_, 2);
-                xmpData_["Xmp.video.EncodedPixelsWidth"]	=	Exiv2::toString(getUShort(buf.pData_, bigEndian))
-                        + "." + Exiv2::toString(getUShort(buf2.pData_, bigEndian));
-                io_->read(buf.pData_, 2); io_->read(buf2.pData_, 2);
-                xmpData_["Xmp.video.EncodedPixelsHeight"]	=	Exiv2::toString(getUShort(buf.pData_, bigEndian))
+                xmpData_["Xmp.video."+ apertureType +"Height"]	=	Exiv2::toString(getUShort(buf.pData_, bigEndian))
                         + "." + Exiv2::toString(getUShort(buf2.pData_, bigEndian));
             }
         }
@@ -1252,20 +1242,18 @@ void QuickTimeVideo::trackApertureTagDecoder(uint32_t size)
         while(n--){
             io_->seek(static_cast<int32_t>(4), BasicIo::cur); io_->read(buf.pData_, 4);
 
-            if(UtilsVideo::compareTagValue(buf, "clef")){
+            apertureType = "";
+            if(UtilsVideo::compareTagValue(buf, "clef"))
+                apertureType = "CleanAperture";
+            else if(UtilsVideo::compareTagValue(buf, "prof"))
+                apertureType = "ProductionAperture";
+            else if(UtilsVideo::compareTagValue(buf, "enof"))
+                apertureType = "EncodedPixels";
+
+            if(apertureType.length() != 0){
                 io_->seek(static_cast<int32_t>(4), BasicIo::cur);
-                writeApertureData(xmpData_["Xmp.video.CleanApertureWidth"],4);
-                writeApertureData(xmpData_["Xmp.video.CleanApertureHeight"],4);
-            }
-            else if(UtilsVideo::compareTagValue(buf, "prof")){
-                io_->seek(static_cast<int32_t>(4), BasicIo::cur);
-                writeApertureData(xmpData_["Xmp.video.ProductionApertureWidth"],4);
-                writeApertureData(xmpData_["Xmp.video.ProductionApertureHeight"],4);
-            }
-            else if(UtilsVideo::compareTagValue(buf, "enof")){
-                io_->seek(static_cast<int32_t>(4), BasicIo::cur);
-                writeApertureData(xmpData_["Xmp.video.EncodedPixelsWidth"],4);
-                writeApertureData(xmpData_["Xmp.video.EncodedPixelsHeight"],4);
+                writeApertureData(xmpData_["Xmp.video."+ apertureType +"Width"],4);
+                writeApertureData(xmpData_["Xmp.video." + apertureType +"Height"],4);
             }
         }
         io_->seek(static_cast<int32_t>(cur_pos + size), BasicIo::beg);
@@ -1489,38 +1477,25 @@ void QuickTimeVideo::NikonTagsDecoder(uint32_t size_external)
                 td2 =   find(NormalSoftHard, (int)buf.pData_[0] & 7 );
                 if(td2) xmpData_["Xmp.video.PictureControlQuickAdjust"] = exvGettext(td2->label_);
 
-                io_->read(buf.pData_, 1);
-                td2 =   find(NormalSoftHard, (int)buf.pData_[0] & 7 );
-                if(td2) xmpData_["Xmp.video.Sharpness"] = exvGettext(td2->label_);
-                else    xmpData_["Xmp.video.Sharpness"] = (int)buf.pData_[0] & 7;
-
-                io_->read(buf.pData_, 1);
-                td2 =   find(NormalSoftHard, (int)buf.pData_[0] & 7 );
-                if(td2) xmpData_["Xmp.video.Contrast"] = exvGettext(td2->label_);
-                else    xmpData_["Xmp.video.Contrast"] = (int)buf.pData_[0] & 7;
-
-                io_->read(buf.pData_, 1);
-                td2 =   find(NormalSoftHard, (int)buf.pData_[0] & 7 );
-                if(td2) xmpData_["Xmp.video.Brightness"] = exvGettext(td2->label_);
-                else    xmpData_["Xmp.video.Brightness"] = (int)buf.pData_[0] & 7;
-
-                io_->read(buf.pData_, 1);
-                td2 =   find(Saturation, (int)buf.pData_[0] & 7 );
-                if(td2) xmpData_["Xmp.video.Saturation"] = exvGettext(td2->label_);
-                else    xmpData_["Xmp.video.Saturation"] = (int)buf.pData_[0] & 7;
+                std::string qualityTagList[] = {"Sharpness", "Contrast", "Brightness", "Saturation" };
+                for(int32_t idx=0; idx<4; idx++){
+                    io_->read(buf.pData_, 1);
+                    td2 =   find(NormalSoftHard, (int)buf.pData_[0] & 7 );
+                    if(td2) xmpData_["Xmp.video." + qualityTagList[idx] ] = exvGettext(td2->label_);
+                    else    xmpData_["Xmp.video."+ qualityTagList[idx] ] = (int)buf.pData_[0] & 7;
+                }
 
                 io_->read(buf.pData_, 1);
                 xmpData_["Xmp.video.HueAdjustment"] = (int)buf.pData_[0] & 7;
 
-                io_->read(buf.pData_, 1);
-                td2 =   find(FilterEffect, (int)buf.pData_[0]);
-                if(td2) xmpData_["Xmp.video.FilterEffect"] = exvGettext(td2->label_);
-                else    xmpData_["Xmp.video.FilterEffect"] = (int)buf.pData_[0];
+                std::string effectTagList[] = {"FilterEffect", "ToningEffect"};
+                for(int32_t idx=0; idx<2; idx++){
+                    io_->read(buf.pData_, 1);
+                    td2 =   find(NormalSoftHard, (int)buf.pData_[0] & 7 );
+                    if(td2) xmpData_["Xmp.video." + effectTagList[idx] ] = exvGettext(td2->label_);
+                    else    xmpData_["Xmp.video."+ effectTagList[idx] ] = (int)buf.pData_[0] & 7;
+                }
 
-                io_->read(buf.pData_, 1);
-                td2 = find(ToningEffect, (int)buf.pData_[0]);
-                if(td2) xmpData_["Xmp.video.ToningEffect"] = exvGettext(td2->label_);
-                else    xmpData_["Xmp.video.ToningEffect"] = (int)buf.pData_[0];
                 io_->read(buf.pData_, 1);	xmpData_["Xmp.video.ToningSaturation"] = (int)buf.pData_[0];
                 io_->seek(local_pos + dataLength, BasicIo::beg);
             }
