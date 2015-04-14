@@ -2183,34 +2183,31 @@ void QuickTimeVideo::handlerDecoder(uint32_t size)
     DataBuf	 buf(100);
     const	TagVocabulary* tv;
 
+    std::string handlerTagString = "";
     if(!d->m_modifyMetadata){
         for (int32_t i = 0; i < 5 ; i++){
             io_->read(buf.pData_, 4);
 
+            handlerTagString = "";
             switch(i){
             case HandlerClass:
                 tv = find(handlerClassTags, Exiv2::toString( buf.pData_));
-                if(tv){
-                    if (d->currentStream_ == Video) xmpData_["Xmp.video.HandlerClass"] = exvGettext(tv->label_);
-                    else if (d->currentStream_ == Audio) xmpData_["Xmp.audio.HandlerClass"] = exvGettext(tv->label_);
-                }
+                handlerTagString = "HandlerClass";
                 break;
 
             case HandlerType:
                 tv = find(handlerTypeTags, Exiv2::toString( buf.pData_));
-                if(tv){
-                    if (d->currentStream_ == Video) xmpData_["Xmp.video.HandlerType"] = exvGettext(tv->label_);
-                    else if (d->currentStream_ == Audio) xmpData_["Xmp.audio.HandlerType"] = exvGettext(tv->label_);
-                }
+                handlerTagString = "HandlerType";
                 break;
 
             case HandlerVendorID:
                 tv = find(vendorIDTags, Exiv2::toString( buf.pData_));
-                if(tv){
-                    if (d->currentStream_ == Video) xmpData_["Xmp.video.HandlerVendorID"] = exvGettext(tv->label_);
-                    else if (d->currentStream_ == Audio) xmpData_["Xmp.audio.HandlerVendorID"] = exvGettext(tv->label_);
-                }
+                handlerTagString = "HandlerVendorID";
                 break;
+            }
+            if(tv && handlerTagString.length() != 0){
+                if (d->currentStream_ == Video) xmpData_["Xmp.video." + handlerTagString] = exvGettext(tv->label_);
+                else if (d->currentStream_ == Audio) xmpData_["Xmp.audio." + handlerTagString] = exvGettext(tv->label_);
             }
         }
         io_->seek(cur_pos + size, BasicIo::beg);
@@ -2242,20 +2239,15 @@ bool QuickTimeVideo::writeAudVidData(int64_t iTagType)
     TagVocabulary revVendorIDTags[(sizeof(vendorIDTags)/sizeof(vendorIDTags[0]))];
     reverseTagVocabulary(vendorIDTags,revVendorIDTags,((sizeof(vendorIDTags)/sizeof(vendorIDTags[0]))));
 
-    if(d->currentStream_ == Video){
-        switch (iTagType) {
-        case 0: tv = find(revTagVocabulary, xmpData_["Xmp.video.HandlerClass"].toString())	  ; break;
-        case 1: tv = find(revHandlerType,	xmpData_["Xmp.video.HandlerType"].toString())	  ; break;
-        case 2: tv = find(revVendorIDTags,	xmpData_["Xmp.video.HandlerVendorID"].toString()) ; break;
-        }
+    std::string audVidString = "";
+    if(d->currentStream_ == Video) audVidString = "video";
+    else if(d->currentStream_ == Audio) audVidString = "audio";
+    switch (iTagType && audVidString.length() != 0) {
+    case 0: tv = find(revTagVocabulary, xmpData_["Xmp."+ audVidString +".HandlerClass"].toString())	  ; break;
+    case 1: tv = find(revHandlerType,	xmpData_["Xmp."+ audVidString +".HandlerType"].toString())	  ; break;
+    case 2: tv = find(revVendorIDTags,	xmpData_["Xmp."+ audVidString +".HandlerVendorID"].toString()) ; break;
     }
-    if(d->currentStream_ == Audio){
-        switch (iTagType) {
-        case 0: tv = find(revTagVocabulary, xmpData_["Xmp.audio.HandlerClass"].toString())	  ; break;
-        case 1: tv = find(revHandlerType,	xmpData_["Xmp.audio.HandlerType"].toString())	  ; break;
-        case 2: tv = find(revVendorIDTags,	xmpData_["Xmp.audio.HandlerVendorID"].toString()) ; break;
-        }
-    }
+
     if(tv){
         Exiv2::byte		  sRawXmpTagVal[4];
         const std::string	 sXmpTagVal = tv->label_;
