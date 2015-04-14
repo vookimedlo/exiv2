@@ -1480,7 +1480,8 @@ void QuickTimeVideo::NikonTagsDecoder(uint32_t size_external)
                 std::string qualityTagList[] = {"Sharpness", "Contrast", "Brightness", "Saturation" };
                 for(int32_t idx=0; idx<4; idx++){
                     io_->read(buf.pData_, 1);
-                    td2 =   find(NormalSoftHard, (int)buf.pData_[0] & 7 );
+                    if(qualityTagList[idx].compare("Saturation") == 0) td2 =   find(Saturation, (int)buf.pData_[0] & 7 );
+                    else td2 =   find(NormalSoftHard, (int)buf.pData_[0] & 7 );
                     if(td2) xmpData_["Xmp.video." + qualityTagList[idx] ] = exvGettext(td2->label_);
                     else    xmpData_["Xmp.video."+ qualityTagList[idx] ] = (int)buf.pData_[0] & 7;
                 }
@@ -1653,57 +1654,23 @@ void QuickTimeVideo::NikonTagsDecoder(uint32_t size_external)
                 if(!bDataWriten) io_->seek(1,BasicIo::cur);
                 bDataWriten = false;
 
-                if(xmpData_["Xmp.video.Sharpness"].count() >0){
-                    RevTagDetails revTagDetails[(sizeof(NormalSoftHard)/sizeof(NormalSoftHard[0]))];
-                    reverseTagDetails(NormalSoftHard,revTagDetails,((sizeof(NormalSoftHard)/sizeof(NormalSoftHard[0]))));
-
-                    rtd2 = find(revTagDetails, xmpData_["Xmp.video.Sharpness"].toString() );
-                    if(rtd2){
-                        Exiv2::byte rawSharpness = (Exiv2::byte)rtd2->val_;
-                        bDataWriten = writeMultibyte(&rawSharpness,1);
+                RevTagDetails revTagDetails[(sizeof(NormalSoftHard)/sizeof(NormalSoftHard[0]))];
+                reverseTagDetails(NormalSoftHard,revTagDetails,((sizeof(NormalSoftHard)/sizeof(NormalSoftHard[0]))));
+                RevTagDetails revSatTagDetails[(sizeof(Saturation)/sizeof(Saturation[0]))];
+                reverseTagDetails(Saturation,revSatTagDetails,((sizeof(Saturation)/sizeof(Saturation[0]))));
+                std::string qualityTagList[] = {"Sharpness", "Contrast", "Brightness", "Saturation" };
+                for(int32_t idx=0; idx<4; idx++){
+                    if(xmpData_["Xmp.video."+qualityTagList[idx]].count() >0){
+                        if(qualityTagList[idx].compare("Saturation") == 0) rtd2 = find(revSatTagDetails, xmpData_["Xmp.video.Sharpness"].toString() );
+                        else rtd2 = find(revTagDetails, xmpData_["Xmp.video.Sharpness"].toString() );
                     }
-                }
-                if(!bDataWriten) io_->seek(1,BasicIo::cur);
-                bDataWriten = false;
-
-                if(xmpData_["Xmp.video.Contrast"].count() >0){
-                    RevTagDetails revTagDetails[(sizeof(NormalSoftHard)/sizeof(NormalSoftHard[0]))];
-                    reverseTagDetails(NormalSoftHard,revTagDetails,((sizeof(NormalSoftHard)/sizeof(NormalSoftHard[0]))));
-
-                    rtd2 = find(revTagDetails, xmpData_["Xmp.video.Contrast"].toString() );
                     if(rtd2){
-                        Exiv2::byte rawContrast = (Exiv2::byte)rtd2->val_;
-                        bDataWriten = writeMultibyte(&rawContrast,1);
+                        Exiv2::byte rawQualityTagVal = (Exiv2::byte)rtd2->val_;
+                        bDataWriten = writeMultibyte(&rawQualityTagVal,1);
                     }
+                    if(!bDataWriten) io_->seek(1,BasicIo::cur);
+                    bDataWriten = false;
                 }
-                if(!bDataWriten) io_->seek(1,BasicIo::cur);
-                bDataWriten = false;
-
-                if(xmpData_["Xmp.video.Brightness"].count() >0){
-                    RevTagDetails revTagDetails[(sizeof(NormalSoftHard)/sizeof(NormalSoftHard[0]))];
-                    reverseTagDetails(NormalSoftHard,revTagDetails,((sizeof(NormalSoftHard)/sizeof(NormalSoftHard[0]))));
-
-                    rtd2 = find(revTagDetails, xmpData_["Xmp.video.Brightness"].toString() );
-                    if(rtd2){
-                        Exiv2::byte rawBrightness = (Exiv2::byte)rtd2->val_;
-                        bDataWriten = writeMultibyte(&rawBrightness,1);
-                    }
-                }
-                if(!bDataWriten) io_->seek(1,BasicIo::cur);
-                bDataWriten = false;
-
-                if(xmpData_["Xmp.video.Saturation"].count() >0){
-                    RevTagDetails revTagDetails[(sizeof(Saturation)/sizeof(Saturation[0]))];
-                    reverseTagDetails(Saturation,revTagDetails,((sizeof(Saturation)/sizeof(Saturation[0]))));
-
-                    rtd2 = find(revTagDetails, xmpData_["Xmp.video.Saturation"].toString() );
-                    if(rtd2){
-                        Exiv2::byte rawSaturation = (Exiv2::byte)rtd2->val_;
-                        bDataWriten = writeMultibyte(&rawSaturation,1);
-                    }
-                }
-                if(!bDataWriten) io_->seek(1,BasicIo::cur);
-                bDataWriten = false;
 
                 if(xmpData_["Xmp.video.HueAdjustment"].count() >0){
                     Exiv2::byte rawHueAdjustment = (Exiv2::byte)xmpData_["Xmp.video.HueAdjustment"].toString()[0];
