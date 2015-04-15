@@ -2242,7 +2242,7 @@ bool QuickTimeVideo::writeAudVidData(int64_t iTagType)
     std::string audVidString = "";
     if(d->currentStream_ == Video) audVidString = "video";
     else if(d->currentStream_ == Audio) audVidString = "audio";
-    switch (iTagType && audVidString.length() != 0) {
+    switch (iTagType) {
     case 0: tv = find(revTagVocabulary, xmpData_["Xmp."+ audVidString +".HandlerClass"].toString())	  ; break;
     case 1: tv = find(revHandlerType,	xmpData_["Xmp."+ audVidString +".HandlerType"].toString())	  ; break;
     case 2: tv = find(revVendorIDTags,	xmpData_["Xmp."+ audVidString +".HandlerVendorID"].toString()) ; break;
