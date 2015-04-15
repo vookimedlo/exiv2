@@ -502,6 +502,14 @@ namespace Exiv2{
     enum aviHeaderTags{
         frameRate, maxDataRate, frameCount = 4,  initialFrames ,streamCount, suggestedBufferSize ,imageWidth_h, imageHeight_h
     };
+
+    enum nikonAVITagsEnum{
+        Make = 0x0003,Model = 0x0004 , Software = 0x0005 , Equipment = 0x0006 ,Orientation = 0x0007 ,
+        ExposureTime = 0x0008 ,FNumber = 0x0009 ,ExposureCompensation = 0x000a ,MaxApertureValue = 0x000b ,
+        MeteringMode = 0x000c ,FocalLength = 0x000f ,XResolution = 0x0010 ,YResolution = 0x0011 ,ResolutionUnit = 0x0012 ,
+        DateTimeOriginal = 0x0013 ,DateTimeDigitized = 0x0014 ,duration = 0x0016 ,FocusMode = 0x0018 ,DigitalZoomRatio = 0x001b ,
+        ColorMode = 0x001d ,Sharpness = 0x001e ,WhiteBalance = 0x001f ,ColorNoiseReduction = 0x0020
+        };
     }
 }                                      // namespace Internal, Exiv2
 
@@ -848,21 +856,7 @@ void RiffVideo::tagDecoder(){
     }
 
     //AVIX can have JUNK chunk directly inside RIFF chunk
-    else if(UtilsVideo::compareTagValue(chkMainId, "JUNK")){
-        DataBuf junkSize((const int32_t)5);
-        junkSize.pData_[4] = '\0';
-        io_->read(junkSize.pData_, 4);
-        uint64_t size = Exiv2::getULong(junkSize.pData_, littleEndian);
-        if(!d->m_decodeMetaData){
-            HeaderChunk* tmpHeaderChunk = new HeaderChunk();
-            tmpHeaderChunk->m_headerLocation = io_->tell() - 8;
-            tmpHeaderChunk->m_headerSize = size;
-            d->m_riffFileSkeleton.m_headerChunks.push_back(tmpHeaderChunk);
-            io_->seek(size,BasicIo::cur);
-        }
-        else junkHandler(size);
-    }
-    else if(UtilsVideo::compareTagValue(chkMainId, "IDIT")){
+    else if(UtilsVideo::compareTagValue(chkMainId, "IDIT") || UtilsVideo::compareTagValue(chkMainId, "JUNK") ){
         DataBuf dataSize((const int32_t)5);
         dataSize.pData_[4] = '\0';
         io_->read(dataSize.pData_, 4);
@@ -874,8 +868,8 @@ void RiffVideo::tagDecoder(){
             d->m_riffFileSkeleton.m_headerChunks.push_back(tmpHeaderChunk);
             io_->seek(size,BasicIo::cur);
         }
+        else if(UtilsVideo::compareTagValue(chkMainId, "JUNK"))  junkHandler(size);
         else dateTimeOriginal(size);
-
     }
 
     tagDecoder();
@@ -1099,19 +1093,19 @@ void RiffVideo::nikonTagsHandler(){
                     else{
                         switch (tagID)
                         {
-                        case 0x0003: case 0x0004: case 0x0005: case 0x0006:
-                        case 0x0013: case 0x0014: case 0x0018: case 0x001d:
-                        case 0x001e: case 0x001f: case 0x0020:
+                        case Make: case Model: case Software: case Equipment:
+                        case DateTimeOriginal: case DateTimeDigitized: case FocusMode: case ColorMode:
+                        case Sharpness: case WhiteBalance: case ColorNoiseReduction:
                             io_->read(buf.pData_, dataSize);
                             xmpData_[exvGettext(td->label_)] = buf.pData_;
                             break;
-                        case 0x0007: case 0x0010: case 0x0011: case 0x000c:
-                        case 0x0012:
+                        case Orientation: case XResolution: case YResolution: case MeteringMode:
+                        case ResolutionUnit:
                             io_->read(buf.pData_, dataSize);
                             xmpData_[exvGettext(td->label_)] = Exiv2::getULong(buf.pData_, littleEndian);
                             break;
-                        case 0x0008: case 0x0009: case 0x000a: case 0x000b:
-                        case 0x000f: case 0x001b: case 0x0016:
+                        case ExposureTime: case FNumber: case ExposureCompensation: case MaxApertureValue:
+                        case FocalLength: case DigitalZoomRatio: case duration:
 
                             io_->read(buf.pData_, dataSize);
                             buf2.pData_[0] = buf.pData_[4];
@@ -1144,17 +1138,17 @@ void RiffVideo::nikonTagsHandler(){
                     }
                     else{
                         switch (tagID){
-                        case 0x0003: case 0x0004: case 0x0005: case 0x0006:
-                        case 0x0013: case 0x0014: case 0x0018: case 0x001d:
-                        case 0x001e: case 0x001f: case 0x0020:
+                        case Make: case Model: case Software: case Equipment:
+                        case DateTimeOriginal: case DateTimeDigitized: case FocusMode: case ColorMode:
+                        case Sharpness: case WhiteBalance: case ColorNoiseReduction:
                             writeStringData(xmpData_[exvGettext(td->label_)],dataSize);
                             break;
-                        case 0x0007: case 0x0010: case 0x0011: case 0x000c:
-                        case 0x0012:
+                        case Orientation: case XResolution: case YResolution: case MeteringMode:
+                        case ResolutionUnit:
                             writeLongData(xmpData_[exvGettext(td->label_)],dataSize);
                             break;
-                        case 0x0008: case 0x0009: case 0x000a: case 0x000b:
-                        case 0x000f: case 0x001b: case 0x0016:
+                        case ExposureTime: case FNumber: case ExposureCompensation: case MaxApertureValue:
+                        case FocalLength: case DigitalZoomRatio: case duration:
 
                             io_->read(buf.pData_, dataSize);
                             buf2.pData_[0] = buf.pData_[4];
