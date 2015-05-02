@@ -664,10 +664,10 @@ void RiffVideo::doWriteMetadata(){
 
     std::vector<std::string> headerFlags;
     //Add new tags to the beginning of the container headerFlags and handle conditions to the end of case statements.
-    headerFlags.push_back("INFO");
-    headerFlags.push_back("NCDT");
-    headerFlags.push_back("ODML");
-    headerFlags.push_back("IDIT");
+    std::string headerFlagsList[] = {"INFO", "NCDT", "ODML", "IDIT"};
+    for(int32_t idx=0; idx<(int32_t)(sizeof(headerFlagsList)/ sizeof(std::string)); idx++){
+        headerFlags.push_back(headerFlagsList[idx]);
+    }
 
     maxCount = (uint64_t) headerFlags.size();
     for (j=0; j<maxCount; j++){
@@ -1582,15 +1582,22 @@ void RiffVideo::streamFormatHandler(int32_t size){
             chkId.pData_[4] = '\0';
             io_->read(chkId.pData_,4);
 
-            writeLongData(xmpData_["Xmp.video.Width"],4);
-            writeLongData(xmpData_["Xmp.video.Height"],4);
-            writeShortData(xmpData_["Xmp.video.Planes"]);
-            writeShortData(xmpData_["Xmp.video.PixelDepth"]);
-            writeStringData(xmpData_["Xmp.video.Compressor"],4);
-            writeLongData(xmpData_["Xmp.video.ImageLength"],4);
-            writeLongData(xmpData_["Xmp.video.PixelPerMeterX"],4);
-            writeLongData(xmpData_["Xmp.video.PixelPerMeterY"],4);
-            writeLongData(xmpData_["Xmp.video.NumOfColours"],4);
+            std::string streamFormatDataList[] = {"Width" , "Height" , "Planes" ,"PixelDepth", "Compressor", "ImageLength" , "PixelPerMeterX",
+                                                  "PixelPerMeterY", "NumOfColours"  };
+            for(int32_t idx=0; idx<(int32_t)(sizeof(streamFormatDataList)/sizeof(std::string)) ; idx++){
+                switch (idx) {
+                case 0: case 1: case 5: case 6: case 7: case 8:
+                    writeLongData(xmpData_["Xmp.video."+ streamFormatDataList[idx]], 4);
+                    break;
+                case 2: case 3:
+                    writeShortData(xmpData_["Xmp.video."+ streamFormatDataList[idx]]);
+                    break;
+                case 4: writeStringData(xmpData_["Xmp.video."+ streamFormatDataList[idx]], 4);
+                    break;
+                default:
+                    break;
+                }
+            }
 
             //Variation
             if(xmpData_["Xmp.video.NumOfImpColours"].count() > 0){
