@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2004-2015 Andreas Huggel <ahuggel@gmx.net>
  *
- * This program is part of the Exiv2 distribution.
+ * This program is part of the Exiv2distribution.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
