@@ -931,7 +931,7 @@ struct tm * const	tmp;
 	*/
 	timesub(&t, ttisp->tt_gmtoff, sp, tmp);
 	tmp->tm_isdst = ttisp->tt_isdst;
-	tzname[tmp->tm_isdst] = &sp->chars[ttisp->tt_abbrind];
+	_tzname[tmp->tm_isdst] = &sp->chars[ttisp->tt_abbrind];
 #ifdef TM_ZONE
 	tmp->TM_ZONE = &sp->chars[ttisp->tt_abbrind];
 #endif /* defined TM_ZONE */
